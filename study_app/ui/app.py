@@ -17,6 +17,7 @@ from ui.quiz import QuizTab
 from ui.hypotheticals import HypotheticalsTab
 from ui.essays import EssaysTab
 from ui.participation import ParticipationTab
+from ui.settings import SettingsTab
 
 
 class StudyForgeApp(ctk.CTk):
@@ -84,6 +85,7 @@ class StudyForgeApp(ctk.CTk):
             ("⚖️", "Hypotheticals"),
             ("📜", "Essays"),
             ("🎓", "Participation"),
+            ("⚙️", "Settings"),
         ]
 
         for icon, label in nav_items:
@@ -108,22 +110,18 @@ class StudyForgeApp(ctk.CTk):
         api_status = "🟢 AI Connected" if self.claude_client else "🔴 AI Offline"
         api_color = COLORS["success"] if self.claude_client else COLORS["danger"]
 
-        ctk.CTkLabel(
+        self.api_label = ctk.CTkLabel(
             sidebar, text=api_status,
             font=FONTS["small"], text_color=api_color
-        ).pack(padx=12, pady=(0, 4), anchor="w")
+        )
+        self.api_label.pack(padx=12, pady=(0, 4), anchor="w")
 
-        # Show config location so user can find it
-        config_path = self.config.get("_config_path", "config.json")
-        config_dir = os.path.dirname(config_path)
-
-        ctk.CTkButton(
-            sidebar, text="📁 Open Config",
-            font=("Segoe UI", 11), text_color=COLORS["text_muted"],
-            fg_color="transparent", hover_color=COLORS["bg_secondary"],
-            height=26, width=140, anchor="w",
-            command=lambda: self._open_folder(config_dir)
-        ).pack(padx=8, pady=(0, 14), anchor="w")
+        hint = "" if self.claude_client else "Click Settings to configure"
+        self.api_hint = ctk.CTkLabel(
+            sidebar, text=hint, font=("Segoe UI", 9),
+            text_color=COLORS["text_muted"]
+        )
+        self.api_hint.pack(padx=12, pady=(0, 14), anchor="w")
 
         # ── Content Area ──────────────────────────────────────────
         self.content_area = ctk.CTkFrame(self, fg_color=COLORS["bg_primary"], corner_radius=0)
@@ -141,6 +139,7 @@ class StudyForgeApp(ctk.CTk):
         self.tabs["Hypotheticals"] = HypotheticalsTab(self.content_area, self)
         self.tabs["Essays"] = EssaysTab(self.content_area, self)
         self.tabs["Participation"] = ParticipationTab(self.content_area, self)
+        self.tabs["Settings"] = SettingsTab(self.content_area, self)
 
     def _open_folder(self, path):
         """Open a folder in the system file explorer."""
@@ -192,6 +191,15 @@ class StudyForgeApp(ctk.CTk):
                     fg_color="transparent",
                     text_color=COLORS["text_secondary"]
                 )
+
+    def update_api_indicator(self, connected: bool):
+        """Called by Settings tab when API connection changes."""
+        if connected:
+            self.api_label.configure(text="🟢 AI Connected", text_color=COLORS["success"])
+            self.api_hint.configure(text="")
+        else:
+            self.api_label.configure(text="🔴 AI Offline", text_color=COLORS["danger"])
+            self.api_hint.configure(text="Click Settings to configure")
 
     def toggle_focus_mode(self):
         """Toggle sidebar visibility for distraction-free notepad writing."""

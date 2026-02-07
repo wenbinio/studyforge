@@ -46,6 +46,11 @@ hiddenimports = [
     "ui.flashcards",
     "ui.notes",
     "ui.quiz",
+    "ui.settings",
+    "ui.hypotheticals",
+    "ui.essays",
+    "ui.notepad",
+    "ui.participation",
 
     # customtkinter
     "customtkinter",

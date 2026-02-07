@@ -223,7 +223,33 @@ Question: {question}
         except Exception as e:
             return False, str(e)
 
-    def generate_hypothetical(self, note_content: str, topic: str = "") -> dict:
+    @staticmethod
+    def test_key(api_key: str, model: str = "claude-sonnet-4-5-20250929") -> tuple[bool, str]:
+        """Test if an API key is valid. Returns (success, message)."""
+        try:
+            client = Anthropic(api_key=api_key)
+            client.messages.create(
+                model=model, max_tokens=20,
+                messages=[{"role": "user", "content": "Say 'connected' only."}])
+            return True, "Connected successfully"
+        except Exception as e:
+            err = str(e)
+            if "401" in err or "authentication" in err.lower():
+                return False, "Invalid API key"
+            elif "404" in err or "model" in err.lower():
+                return False, "Model not found — check model name"
+            elif "connection" in err.lower() or "network" in err.lower():
+                return False, "Network error — check internet connection"
+            return False, f"Error: {err[:120]}"
+
+    def _call_with_model(self, system: str, user_msg: str, max_tokens: int = 4096, model_override: str = None) -> str:
+        """Call Claude with an optional model override."""
+        response = self.client.messages.create(
+            model=model_override or self.model, max_tokens=max_tokens, system=system,
+            messages=[{"role": "user", "content": user_msg}])
+        return response.content[0].text
+
+    def generate_hypothetical(self, note_content: str, topic: str = "", model_override: str = None) -> dict:
         """Generate a legal hypothetical scenario from notes.
         Returns dict: {"title": "...", "scenario": "...", "model_answer": "..."}
         """
@@ -242,12 +268,12 @@ Respond ONLY with JSON: {{"title":"...","scenario":"...","model_answer":"A thoro
 
 --- NOTES ---
 {note_content[:8000]}"""
-        parsed = self._parse_json_response(self._call(system, prompt))
+        parsed = self._parse_json_response(self._call_with_model(system, prompt, model_override=model_override))
         if isinstance(parsed, dict) and "scenario" in parsed:
             return parsed
         return {}
 
-    def grade_hypothetical(self, scenario: str, response: str, model_answer: str = "") -> dict:
+    def grade_hypothetical(self, scenario: str, response: str, model_answer: str = "", model_override: str = None) -> dict:
         """Grade a student's response to a legal hypothetical.
         Returns dict: {"grade": "A/B/C/D/F", "score": 0-100, "feedback": "...", "strengths": [...], "weaknesses": [...]}
         """
@@ -266,12 +292,12 @@ Respond ONLY with JSON: {{"title":"...","scenario":"...","model_answer":"A thoro
 
 Evaluate on: Issue spotting, Rule statements, Application/Analysis, Counterarguments, Organization, Writing clarity.
 Respond ONLY with JSON: {{"grade":"A/A-/B+/B/B-/C+/C/C-/D/F","score":85,"feedback":"Overall assessment...","strengths":["..."],"weaknesses":["..."]}}"""
-        parsed = self._parse_json_response(self._call(system, prompt))
+        parsed = self._parse_json_response(self._call_with_model(system, prompt, model_override=model_override))
         if isinstance(parsed, dict) and "grade" in parsed:
             return parsed
         return {}
 
-    def grade_essay(self, prompt_text: str, essay: str, rubric: str = "") -> dict:
+    def grade_essay(self, prompt_text: str, essay: str, rubric: str = "", model_override: str = None) -> dict:
         """Grade a legal essay, optionally against a rubric.
         Returns dict: {"grade": "...", "score": 0-100, "feedback": "...", "rubric_scores": {...}, "strengths": [...], "weaknesses": [...]}
         """
@@ -289,12 +315,12 @@ Respond ONLY with JSON: {{"grade":"A/A-/B+/B/B-/C+/C/C-/D/F","score":85,"feedbac
 {essay[:8000]}
 
 Respond ONLY with JSON: {{"grade":"A/A-/B+/B/B-/C+/C/C-/D/F","score":85,"feedback":"Overall assessment...","rubric_scores":{{"criterion":"score/description"}},"strengths":["..."],"weaknesses":["..."],"suggestions":["..."]}}"""
-        parsed = self._parse_json_response(self._call(system, user_prompt))
+        parsed = self._parse_json_response(self._call_with_model(system, user_prompt, model_override=model_override))
         if isinstance(parsed, dict) and "grade" in parsed:
             return parsed
         return {}
 
-    def generate_participation_questions(self, note_content: str, topic: str = "") -> dict:
+    def generate_participation_questions(self, note_content: str, topic: str = "", model_override: str = None) -> dict:
         """Generate class participation questions from notes.
         Returns dict: {"interesting": [...], "unanswered": [...], "key_questions": [...]}
         """
@@ -315,7 +341,7 @@ Respond ONLY with JSON: {{"interesting":[{{"question":"...","why_it_matters":"..
 
 --- NOTES ---
 {note_content[:8000]}"""
-        parsed = self._parse_json_response(self._call(system, prompt))
+        parsed = self._parse_json_response(self._call_with_model(system, prompt, model_override=model_override))
         if isinstance(parsed, dict):
             return parsed
         return {}
