@@ -122,7 +122,7 @@ class NotepadTab(ctk.CTkFrame):
                 ctk.CTkButton(
                     toolbar, text=text, width=max(36, len(text) * 10 + 10), height=28,
                     font=btn_font, fg_color="transparent",
-                    hover_color=COLORS["bg_card"],
+                    hover_color=COLORS["bg_hover"],
                     text_color=COLORS["text_secondary"], corner_radius=6,
                     command=cmd
                 ).pack(side="left", padx=1, pady=4)
