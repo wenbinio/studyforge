@@ -20,9 +20,12 @@ class NotepadTab(ctk.CTkFrame):
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(2, weight=1)
 
+        # Notepad-specific padding (slightly more than other tabs for better visual alignment)
+        notepad_padx = PAD["page"] + 8  # 28px instead of standard 20px
+
         # ── Header row ────────────────────────────────────────────
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=PAD["page"], pady=(PAD["page"], 5))
+        header.grid(row=0, column=0, sticky="ew", padx=notepad_padx, pady=(PAD["page"], 5))
 
         ctk.CTkLabel(header, text="✏️ Notepad", font=FONTS["heading"],
             text_color=COLORS["text_primary"]).pack(side="left")
@@ -56,7 +59,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Formatting toolbar ────────────────────────────────────
         toolbar = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8, height=40)
-        toolbar.grid(row=1, column=0, sticky="ew", padx=PAD["page"], pady=(0, 0))
+        toolbar.grid(row=1, column=0, sticky="ew", padx=notepad_padx, pady=(0, 0))
 
         fmt_buttons = [
             ("H1", lambda: self._insert_prefix("# ")),
@@ -97,7 +100,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Title entry ───────────────────────────────────────────
         title_frame = ctk.CTkFrame(self, fg_color="transparent")
-        title_frame.grid(row=2, column=0, sticky="ew", padx=PAD["page"], pady=(0, 5))
+        title_frame.grid(row=2, column=0, sticky="ew", padx=notepad_padx, pady=(0, 5))
 
         self.title_entry = ctk.CTkEntry(title_frame, placeholder_text="Note title...",
             fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
@@ -106,7 +109,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Note selector row ────────────────────────────────────
         selector_frame = ctk.CTkFrame(self, fg_color="transparent")
-        selector_frame.grid(row=3, column=0, sticky="ew", padx=PAD["page"], pady=(0, 5))
+        selector_frame.grid(row=3, column=0, sticky="ew", padx=notepad_padx, pady=(0, 5))
 
         ctk.CTkLabel(selector_frame, text="📂 Open:", font=FONTS["small"],
             text_color=COLORS["text_muted"]).pack(side="left")
@@ -133,7 +136,7 @@ class NotepadTab(ctk.CTkFrame):
         self.grid_rowconfigure(4, weight=1)
 
         self.editor_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.editor_frame.grid(row=4, column=0, sticky="nsew", padx=PAD["page"], pady=(0, PAD["page"]))
+        self.editor_frame.grid(row=4, column=0, sticky="nsew", padx=notepad_padx, pady=(0, PAD["page"]))
         self.editor_frame.grid_columnconfigure(0, weight=0)  # navigator (fixed width)
         self.editor_frame.grid_columnconfigure(1, weight=1)  # editor
         self.editor_frame.grid_columnconfigure(2, weight=0)  # preview (shown dynamically)
