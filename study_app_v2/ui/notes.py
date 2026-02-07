@@ -433,6 +433,8 @@ class NotesTab(ctk.CTkFrame):
     def _new_note(self):
         """Create a new blank note and open it in the editor."""
         note_id = db.add_note("Untitled Note", "")
+        if not note_id:
+            return
         self.refresh()
         self.view_note(note_id)
 
