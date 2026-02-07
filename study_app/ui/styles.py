@@ -6,6 +6,7 @@ styles.py — Shared styling constants for StudyForge UI.
 COLORS = {
     "bg_primary": "#1a1b2e",
     "bg_secondary": "#232442",
+    "bg_hover": "#272846",
     "bg_card": "#2a2b4a",
     "bg_input": "#1e1f3a",
     "accent": "#6c5ce7",

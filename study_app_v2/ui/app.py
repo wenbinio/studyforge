@@ -96,7 +96,7 @@ class StudyForgeApp(ctk.CTk):
             icon_label.pack(side="left", padx=(8, 0))
 
             btn = ctk.CTkButton(btn_frame, text=label, font=FONTS["body"], height=40,
-                fg_color="transparent", hover_color=COLORS["bg_card"],
+                fg_color="transparent", hover_color=COLORS["bg_hover"],
                 text_color=COLORS["text_secondary"], anchor="w", corner_radius=8,
                 command=lambda l=label: self.select_tab(l))
             btn.pack(side="left", fill="x", expand=True)
