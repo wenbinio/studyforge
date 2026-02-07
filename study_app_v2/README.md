@@ -31,9 +31,8 @@ The welcome wizard lets you paste your Claude API key (optional — you can skip
 | **Dashboard** | Daily stats, streak, cards due, 7-day review forecast |
 | **Pomodoro Timer** | Configurable work/break cycles, session dots, stats |
 | **Flashcards** | SM-2 spaced repetition review, manual creation, AI bulk generation |
-| **Notes Manager** | Import `.txt` `.md` `.pdf` `.docx`; tag, search, edit |
+| **Notes Manager** | Import `.txt` `.md` `.pdf` `.docx`; tag, search, edit with rich markdown formatting, preview, and focus mode |
 | **Active Recall Quiz** | AI-generated MCQs with difficulty, explanations, scoring |
-| **Notepad** | Rich text editor with markdown formatting, preview, and focus mode |
 | **Essays** | Essay writing with rubric upload and AI grading |
 | **Hypotheticals** | AI-generated legal hypothetical scenarios from your notes |
 | **Class Participation** | AI-generated discussion questions for class preparation |
@@ -71,9 +70,8 @@ StudyForge/
 │   ├── dashboard.py        ← Dashboard tab
 │   ├── pomodoro.py         ← Pomodoro timer tab
 │   ├── flashcards.py       ← Flashcard review + creation
-│   ├── notes.py            ← Notes manager tab
+│   ├── notes.py            ← Notes manager with rich editing and focus mode
 │   ├── quiz.py             ← Active recall quiz tab
-│   ├── notepad.py          ← Rich text editor with focus mode
 │   ├── essays.py           ← Essay writing with AI grading
 │   ├── hypotheticals.py    ← Legal hypothetical scenarios
 │   ├── participation.py    ← Class participation questions
