@@ -52,6 +52,16 @@ class NotepadTab(ctk.CTkFrame):
         )
         self.preview_btn.pack(side="left", padx=4)
 
+        # Navigator toggle
+        self.nav_visible = False
+        self.nav_btn = ctk.CTkButton(
+            btn_row, text="Navigator", width=100, height=34,
+            font=FONTS["body"], fg_color=COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=8,
+            command=self._toggle_navigator
+        )
+        self.nav_btn.pack(side="left", padx=4)
+
         # Save note
         ctk.CTkButton(
             btn_row, text="💾 Save", width=80, height=34,
@@ -76,6 +86,7 @@ class NotepadTab(ctk.CTkFrame):
             ("H1", lambda: self._insert_prefix("# ")),
             ("H2", lambda: self._insert_prefix("## ")),
             ("H3", lambda: self._insert_prefix("### ")),
+            ("H4", lambda: self._insert_prefix("#### ")),
             ("|", None),
             ("B", lambda: self._wrap_selection("**")),
             ("I", lambda: self._wrap_selection("*")),
@@ -98,7 +109,7 @@ class NotepadTab(ctk.CTkFrame):
                     side="left", padx=4, pady=8
                 )
             else:
-                is_heading = text in ("H1", "H2", "H3")
+                is_heading = text in ("H1", "H2", "H3", "H4")
                 if is_heading or text == "B":
                     btn_font = ("Segoe UI", 12, "bold")
                 elif text == "I":
@@ -164,9 +175,17 @@ class NotepadTab(ctk.CTkFrame):
 
         self.editor_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.editor_frame.grid(row=4, column=0, sticky="nsew", padx=PADDING["page"], pady=(0, PADDING["page"]))
-        self.editor_frame.grid_columnconfigure(0, weight=1)
-        self.editor_frame.grid_columnconfigure(1, weight=1)
+        self.editor_frame.grid_columnconfigure(0, weight=0)  # navigator (fixed width)
+        self.editor_frame.grid_columnconfigure(1, weight=1)  # editor
+        self.editor_frame.grid_columnconfigure(2, weight=1)  # preview
         self.editor_frame.grid_rowconfigure(0, weight=1)
+
+        # Navigator panel (hidden by default)
+        self.nav_panel = ctk.CTkScrollableFrame(
+            self.editor_frame, fg_color=COLORS["bg_card"],
+            width=180, corner_radius=8,
+            border_color=COLORS["border"], border_width=1
+        )
 
         # Editor
         self.editor = ctk.CTkTextbox(
@@ -175,7 +194,7 @@ class NotepadTab(ctk.CTkFrame):
             border_color=COLORS["border"], border_width=1, corner_radius=8,
             wrap="word", undo=True
         )
-        self.editor.grid(row=0, column=0, sticky="nsew", columnspan=2)
+        self.editor.grid(row=0, column=1, sticky="nsew", columnspan=2)
 
         # Preview panel (hidden by default)
         self.preview_panel = ctk.CTkTextbox(
@@ -252,10 +271,77 @@ class NotepadTab(ctk.CTkFrame):
             self.preview_visible = False
         else:
             self.editor.grid_configure(columnspan=1)
-            self.preview_panel.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
+            self.preview_panel.grid(row=0, column=2, sticky="nsew", padx=(5, 0))
             self._render_preview()
             self.preview_btn.configure(fg_color=COLORS["accent"])
             self.preview_visible = True
+
+    # ── Markdown Navigator ────────────────────────────────────────
+
+    def _toggle_navigator(self):
+        """Toggle the heading navigator panel."""
+        if self.nav_visible:
+            self.nav_panel.grid_forget()
+            self.nav_btn.configure(fg_color=COLORS["bg_card"])
+            self.nav_visible = False
+        else:
+            self.nav_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+            self._refresh_navigator()
+            self.nav_btn.configure(fg_color=COLORS["accent"])
+            self.nav_visible = True
+
+    def _refresh_navigator(self):
+        """Scan the editor content for headings and populate the navigator."""
+        for w in self.nav_panel.winfo_children():
+            w.destroy()
+
+        ctk.CTkLabel(
+            self.nav_panel, text="Headings",
+            font=FONTS["body_bold"], text_color=COLORS["text_primary"]
+        ).pack(anchor="w", padx=6, pady=(4, 6))
+
+        content = self.editor.get("1.0", "end")
+        lines = content.split("\n")
+        found = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            level = 0
+            title = ""
+            if stripped.startswith("#### "):
+                level, title = 4, stripped[5:]
+            elif stripped.startswith("### "):
+                level, title = 3, stripped[4:]
+            elif stripped.startswith("## "):
+                level, title = 2, stripped[3:]
+            elif stripped.startswith("# "):
+                level, title = 1, stripped[2:]
+
+            if level and title:
+                found = True
+                indent = (level - 1) * 10
+                line_num = i + 1
+                btn = ctk.CTkButton(
+                    self.nav_panel, text=title[:30],
+                    font=FONTS["small"] if level > 2 else FONTS["body_bold"],
+                    fg_color="transparent", hover_color=COLORS["bg_secondary"],
+                    text_color=COLORS["text_secondary"], anchor="w",
+                    height=24, corner_radius=4,
+                    command=lambda ln=line_num: self._navigate_to_line(ln)
+                )
+                btn.pack(fill="x", padx=(6 + indent, 4), pady=1)
+
+        if not found:
+            ctk.CTkLabel(
+                self.nav_panel, text="No headings found",
+                font=FONTS["small"], text_color=COLORS["text_muted"]
+            ).pack(padx=6, pady=8)
+
+    def _navigate_to_line(self, line_num):
+        """Scroll the editor to a specific line."""
+        pos = f"{line_num}.0"
+        self.editor.mark_set("insert", pos)
+        self.editor.see(pos)
+        self.editor.focus_set()
 
     def _render_preview(self):
         """Render markdown content as styled text in the preview panel."""
@@ -278,7 +364,9 @@ class NotepadTab(ctk.CTkFrame):
         output = []
         for line in lines:
             stripped = line.strip()
-            if stripped.startswith("### "):
+            if stripped.startswith("#### "):
+                output.append(f"    {stripped[5:]}")
+            elif stripped.startswith("### "):
                 output.append(f"   {stripped[4:].upper()}")
             elif stripped.startswith("## "):
                 output.append(f"  ━━ {stripped[3:].upper()} ━━")
@@ -432,3 +520,5 @@ class NotepadTab(ctk.CTkFrame):
         self._refresh_note_selector()
         if self.preview_visible:
             self._render_preview()
+        if self.nav_visible:
+            self._refresh_navigator()
