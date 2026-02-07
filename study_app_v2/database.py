@@ -57,6 +57,39 @@ def init_db():
             cards_added INTEGER DEFAULT 0, pomodoro_sessions INTEGER DEFAULT 0,
             study_minutes INTEGER DEFAULT 0, quiz_questions_answered INTEGER DEFAULT 0
         )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS hypotheticals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            note_id INTEGER, title TEXT NOT NULL, scenario TEXT NOT NULL,
+            response TEXT DEFAULT '', grade TEXT DEFAULT '',
+            feedback TEXT DEFAULT '', created_at TEXT NOT NULL,
+            FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE SET NULL
+        )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS essays (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            note_id INTEGER, title TEXT NOT NULL, prompt TEXT NOT NULL,
+            content TEXT DEFAULT '', rubric_id INTEGER,
+            grade TEXT DEFAULT '', feedback TEXT DEFAULT '',
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+            FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE SET NULL,
+            FOREIGN KEY (rubric_id) REFERENCES rubrics(id) ON DELETE SET NULL
+        )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS rubrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL, content TEXT NOT NULL,
+            source_file TEXT DEFAULT '', created_at TEXT NOT NULL
+        )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS participation_questions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            note_id INTEGER, question TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'interesting',
+            answer TEXT DEFAULT '', notes TEXT DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE SET NULL
+        )""")
     conn.commit()
     conn.close()
 
@@ -208,3 +241,148 @@ def get_total_cards():
     conn = get_connection()
     row = conn.execute("SELECT COUNT(*) as cnt FROM flashcards").fetchone()
     conn.close(); return row["cnt"]
+
+
+# ── Hypotheticals ─────────────────────────────────────────────────
+
+def add_hypothetical(title, scenario, note_id=None):
+    conn = get_connection()
+    now = datetime.now().isoformat()
+    c = conn.execute(
+        "INSERT INTO hypotheticals (note_id,title,scenario,created_at) VALUES (?,?,?,?)",
+        (note_id, title, scenario, now))
+    hid = c.lastrowid
+    conn.commit(); conn.close()
+    return hid
+
+def get_all_hypotheticals():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM hypotheticals ORDER BY created_at DESC").fetchall()
+    conn.close(); return [dict(r) for r in rows]
+
+def get_hypothetical(hyp_id):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM hypotheticals WHERE id=?", (hyp_id,)).fetchone()
+    conn.close(); return dict(row) if row else None
+
+def update_hypothetical(hyp_id, response=None, grade=None, feedback=None):
+    conn = get_connection()
+    hyp = get_hypothetical(hyp_id)
+    if not hyp: conn.close(); return
+    conn.execute("UPDATE hypotheticals SET response=?, grade=?, feedback=? WHERE id=?",
+        (response if response is not None else hyp["response"],
+         grade if grade is not None else hyp["grade"],
+         feedback if feedback is not None else hyp["feedback"], hyp_id))
+    conn.commit(); conn.close()
+
+def delete_hypothetical(hyp_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM hypotheticals WHERE id=?", (hyp_id,))
+    conn.commit(); conn.close()
+
+
+# ── Essays ────────────────────────────────────────────────────────
+
+def add_essay(title, prompt, note_id=None, rubric_id=None):
+    conn = get_connection()
+    now = datetime.now().isoformat()
+    c = conn.execute(
+        "INSERT INTO essays (note_id,title,prompt,rubric_id,created_at,updated_at) VALUES (?,?,?,?,?,?)",
+        (note_id, title, prompt, rubric_id, now, now))
+    eid = c.lastrowid
+    conn.commit(); conn.close()
+    return eid
+
+def get_all_essays():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM essays ORDER BY updated_at DESC").fetchall()
+    conn.close(); return [dict(r) for r in rows]
+
+def get_essay(essay_id):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM essays WHERE id=?", (essay_id,)).fetchone()
+    conn.close(); return dict(row) if row else None
+
+def update_essay(essay_id, content=None, grade=None, feedback=None):
+    conn = get_connection()
+    essay = get_essay(essay_id)
+    if not essay: conn.close(); return
+    conn.execute("UPDATE essays SET content=?, grade=?, feedback=?, updated_at=? WHERE id=?",
+        (content if content is not None else essay["content"],
+         grade if grade is not None else essay["grade"],
+         feedback if feedback is not None else essay["feedback"],
+         datetime.now().isoformat(), essay_id))
+    conn.commit(); conn.close()
+
+def delete_essay(essay_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM essays WHERE id=?", (essay_id,))
+    conn.commit(); conn.close()
+
+
+# ── Rubrics ───────────────────────────────────────────────────────
+
+def add_rubric(name, content, source_file=""):
+    conn = get_connection()
+    now = datetime.now().isoformat()
+    c = conn.execute(
+        "INSERT INTO rubrics (name,content,source_file,created_at) VALUES (?,?,?,?)",
+        (name, content, source_file, now))
+    rid = c.lastrowid
+    conn.commit(); conn.close()
+    return rid
+
+def get_all_rubrics():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM rubrics ORDER BY created_at DESC").fetchall()
+    conn.close(); return [dict(r) for r in rows]
+
+def get_rubric(rubric_id):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM rubrics WHERE id=?", (rubric_id,)).fetchone()
+    conn.close(); return dict(row) if row else None
+
+def delete_rubric(rubric_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM rubrics WHERE id=?", (rubric_id,))
+    conn.commit(); conn.close()
+
+
+# ── Participation Questions ───────────────────────────────────────
+
+def add_participation_question(question, category="interesting", note_id=None, answer="", notes=""):
+    conn = get_connection()
+    now = datetime.now().isoformat()
+    c = conn.execute(
+        "INSERT INTO participation_questions (note_id,question,category,answer,notes,created_at) VALUES (?,?,?,?,?,?)",
+        (note_id, question, category, answer, notes, now))
+    qid = c.lastrowid
+    conn.commit(); conn.close()
+    return qid
+
+def get_all_participation_questions():
+    conn = get_connection()
+    rows = conn.execute("SELECT * FROM participation_questions ORDER BY created_at DESC").fetchall()
+    conn.close(); return [dict(r) for r in rows]
+
+def get_participation_questions_by_category(category):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM participation_questions WHERE category=? ORDER BY created_at DESC",
+        (category,)).fetchall()
+    conn.close(); return [dict(r) for r in rows]
+
+def update_participation_question(q_id, answer=None, notes=None):
+    conn = get_connection()
+    q = conn.execute("SELECT * FROM participation_questions WHERE id=?", (q_id,)).fetchone()
+    if not q: conn.close(); return
+    q = dict(q)
+    conn.execute("UPDATE participation_questions SET answer=?, notes=? WHERE id=?",
+        (answer if answer is not None else q["answer"],
+         notes if notes is not None else q["notes"], q_id))
+    conn.commit(); conn.close()
+
+def delete_participation_question(q_id):
+    conn = get_connection()
+    conn.execute("DELETE FROM participation_questions WHERE id=?", (q_id,))
+    conn.commit(); conn.close()

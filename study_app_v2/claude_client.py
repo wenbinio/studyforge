@@ -97,3 +97,107 @@ One-line definition, then deeper explanation with analogy, key distinctions. Und
             elif "connection" in err.lower() or "network" in err.lower():
                 return False, "Network error — check internet connection"
             return False, f"Error: {err[:120]}"
+
+    def _call_with_model(self, system: str, user_msg: str, max_tokens: int = 4096, model_override: str = None) -> str:
+        """Call Claude with an optional model override."""
+        response = self.client.messages.create(
+            model=model_override or self.model, max_tokens=max_tokens, system=system,
+            messages=[{"role": "user", "content": user_msg}])
+        return response.content[0].text
+
+    def generate_hypothetical(self, note_content: str, topic: str = "", model_override: str = None) -> dict:
+        """Generate a legal hypothetical scenario from notes.
+        Returns dict: {"title": "...", "scenario": "...", "model_answer": "..."}
+        """
+        system = ("You are a law school professor who creates challenging hypothetical scenarios. "
+                  "Create fact patterns that test legal reasoning, issue spotting, and rule application. "
+                  "Respond with ONLY a JSON object.")
+        prompt = f"""Create a legal hypothetical scenario based on these notes.
+{f"Topic focus: {topic}" if topic else ""}
+
+Include:
+- A detailed fact pattern with multiple parties and legal issues
+- Enough complexity to require analysis of competing arguments
+- Realistic but challenging circumstances
+
+Respond ONLY with JSON: {{"title":"...","scenario":"...","model_answer":"A thorough analysis covering all issues, arguments, and likely outcomes"}}
+
+--- NOTES ---
+{note_content[:8000]}"""
+        parsed = self._parse_json(self._call_with_model(system, prompt, model_override=model_override))
+        if isinstance(parsed, dict) and "scenario" in parsed:
+            return parsed
+        return {}
+
+    def grade_hypothetical(self, scenario: str, response: str, model_answer: str = "", model_override: str = None) -> dict:
+        """Grade a student's response to a legal hypothetical.
+        Returns dict: {"grade": "A/B/C/D/F", "score": 0-100, "feedback": "...", "strengths": [...], "weaknesses": [...]}
+        """
+        system = ("You are an experienced law professor grading a student's hypothetical analysis. "
+                  "Evaluate issue spotting, rule application, analysis depth, and writing quality. "
+                  "Respond with ONLY a JSON object.")
+        prompt = f"""Grade this student's response to the legal hypothetical.
+
+--- HYPOTHETICAL ---
+{scenario[:4000]}
+
+--- STUDENT RESPONSE ---
+{response[:6000]}
+
+{f"--- MODEL ANSWER ---{chr(10)}{model_answer[:4000]}" if model_answer else ""}
+
+Evaluate on: Issue spotting, Rule statements, Application/Analysis, Counterarguments, Organization, Writing clarity.
+Respond ONLY with JSON: {{"grade":"A/A-/B+/B/B-/C+/C/C-/D/F","score":85,"feedback":"Overall assessment...","strengths":["..."],"weaknesses":["..."]}}"""
+        parsed = self._parse_json(self._call_with_model(system, prompt, model_override=model_override))
+        if isinstance(parsed, dict) and "grade" in parsed:
+            return parsed
+        return {}
+
+    def grade_essay(self, prompt_text: str, essay: str, rubric: str = "", model_override: str = None) -> dict:
+        """Grade a legal essay, optionally against a rubric.
+        Returns dict: {"grade": "...", "score": 0-100, "feedback": "...", "rubric_scores": {...}, "strengths": [...], "weaknesses": [...]}
+        """
+        system = ("You are an experienced law professor grading a legal essay. "
+                  "Evaluate thesis, analysis, use of authority, counterarguments, organization, and writing. "
+                  "Respond with ONLY a JSON object.")
+        rubric_section = f"\n--- RUBRIC ---\n{rubric[:4000]}\nGrade according to these rubric criteria." if rubric else ""
+        user_prompt = f"""Grade this legal essay.
+
+--- ESSAY PROMPT ---
+{prompt_text[:2000]}
+{rubric_section}
+
+--- STUDENT ESSAY ---
+{essay[:8000]}
+
+Respond ONLY with JSON: {{"grade":"A/A-/B+/B/B-/C+/C/C-/D/F","score":85,"feedback":"Overall assessment...","rubric_scores":{{"criterion":"score/description"}},"strengths":["..."],"weaknesses":["..."],"suggestions":["..."]}}"""
+        parsed = self._parse_json(self._call_with_model(system, user_prompt, model_override=model_override))
+        if isinstance(parsed, dict) and "grade" in parsed:
+            return parsed
+        return {}
+
+    def generate_participation_questions(self, note_content: str, topic: str = "", model_override: str = None) -> dict:
+        """Generate class participation questions from notes.
+        Returns dict: {"interesting": [...], "unanswered": [...], "key_questions": [...]}
+        """
+        system = ("You are a legal education expert identifying questions for class participation. "
+                  "Think like a well-prepared law student who has read the material carefully. "
+                  "Respond with ONLY a JSON object.")
+        prompt = f"""Analyze these legal notes and generate three categories of questions:
+
+1. **Interesting Questions**: Thought-provoking questions that would demonstrate engagement and critical thinking in class
+2. **Unanswered/Open Questions**: Questions the material raises but doesn't fully resolve — gaps, ambiguities, or evolving areas of law
+3. **Key Questions**: Essential questions a legally-educated student would genuinely want answered to fully understand the material
+
+{f"Topic: {topic}" if topic else ""}
+
+For each question, include a brief note on why it matters.
+
+Respond ONLY with JSON: {{"interesting":[{{"question":"...","why_it_matters":"..."}}],"unanswered":[{{"question":"...","why_it_matters":"..."}}],"key_questions":[{{"question":"...","why_it_matters":"..."}}]}}
+
+--- NOTES ---
+{note_content[:8000]}"""
+        parsed = self._parse_json(self._call_with_model(system, prompt, model_override=model_override))
+        if isinstance(parsed, dict):
+            return parsed
+        return {}
