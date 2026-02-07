@@ -58,11 +58,11 @@ echo    dist\StudyForge.exe
 echo.
 echo  First run:
 echo    1. Double-click StudyForge.exe
-echo    2. It will create a config file at:
-echo       %%APPDATA%%\StudyForge\config.json
-echo    3. Edit that file to add your Claude API key
+echo    2. Click the Settings tab in the sidebar
+echo    3. Enter your Claude API key
 echo       (get one at console.anthropic.com)
-echo    4. Restart StudyForge - AI features will activate
+echo    4. Select your preferred model and click Save
+echo       AI features will activate immediately
 echo.
 echo  Your study data (flashcards, notes, stats) is stored at:
 echo    %%APPDATA%%\StudyForge\data\

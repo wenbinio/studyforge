@@ -1,11 +1,29 @@
 """essays.py — Legal Essays tab with rubric upload and AI grading."""
 
 import customtkinter as ctk
-import threading
+import json
 import os
+import threading
 from tkinter import filedialog
 from ui.styles import COLORS, FONTS, PADDING
 import database as db
+
+
+def _update_config_setting(config_path, key, value):
+    """Update a single setting in the config file."""
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as f:
+                config = json.load(f)
+        except Exception:
+            pass
+    config[key] = value
+    try:
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=2)
+    except Exception:
+        pass
 
 
 def extract_rubric_text(filepath: str) -> str:
@@ -42,6 +60,23 @@ class EssaysTab(ctk.CTkFrame):
     def build_ui(self):
         ctk.CTkLabel(self, text="📜 Legal Essays", font=FONTS["heading"],
             text_color=COLORS["text_primary"]).pack(padx=PADDING["page"], pady=(PADDING["page"], 5), anchor="w")
+
+        # ── Model selector ────────────────────────────────────────
+        model_f = ctk.CTkFrame(self, fg_color=COLORS["bg_card"], corner_radius=12)
+        model_f.pack(fill="x", padx=PADDING["page"], pady=(0, PADDING["element"]))
+
+        mf_inner = ctk.CTkFrame(model_f, fg_color="transparent")
+        mf_inner.pack(fill="x", padx=PADDING["section"], pady=PADDING["element"])
+
+        ctk.CTkLabel(mf_inner, text="Claude Model:", font=FONTS["body"],
+            text_color=COLORS["text_secondary"]).pack(side="left")
+        override = self.app.config.get("claude_model_essays", "")
+        self.model_var = ctk.StringVar(value=override if override else "(use default)")
+        ctk.CTkOptionMenu(mf_inner, variable=self.model_var,
+            values=["(use default)", "claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001", "claude-opus-4-6"],
+            fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
+            font=FONTS["body"], corner_radius=8, width=300,
+            command=self._save_model).pack(side="left", padx=8)
 
         # ── Create / Rubric section ───────────────────────────────
         create_card = ctk.CTkFrame(self, fg_color=COLORS["bg_card"], corner_radius=12)
@@ -97,6 +132,16 @@ class EssaysTab(ctk.CTkFrame):
         self.content_f.pack(fill="both", expand=True, padx=PADDING["page"], pady=(0, PADDING["page"]))
 
         self._show_history()
+
+    def _save_model(self, value):
+        model = "" if value == "(use default)" else value
+        config_path = self.app.config.get("_config_path", "config.json")
+        _update_config_setting(config_path, "claude_model_essays", model)
+        self.app.config["claude_model_essays"] = model
+
+    def _get_model_override(self):
+        val = self.model_var.get()
+        return None if val == "(use default)" else val
 
     def _upload_rubric(self):
         fp = filedialog.askopenfilename(title="Upload Rubric",
@@ -291,7 +336,8 @@ class EssaysTab(ctk.CTkFrame):
         def run():
             try:
                 result = self.app.claude_client.grade_essay(
-                    essay["prompt"], content, rubric_text)
+                    essay["prompt"], content, rubric_text,
+                    model_override=self._get_model_override())
                 if result and "grade" in result:
                     grade_str = result.get("grade", "")
                     feedback_parts = []
