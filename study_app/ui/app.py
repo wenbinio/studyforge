@@ -89,17 +89,20 @@ class StudyForgeApp(ctk.CTk):
         ]
 
         for icon, label in nav_items:
-            btn = ctk.CTkButton(
-                sidebar, text=f"  {icon}  {label}",
-                font=FONTS["body"], height=40,
-                fg_color="transparent",
-                hover_color=COLORS["bg_card"],
-                text_color=COLORS["text_secondary"],
-                anchor="w", corner_radius=8,
-                command=lambda l=label: self.select_tab(l)
-            )
-            btn.pack(fill="x", padx=8, pady=2)
-            self.nav_buttons[label] = btn
+            btn_frame = ctk.CTkFrame(sidebar, fg_color="transparent", corner_radius=8)
+            btn_frame.pack(fill="x", padx=8, pady=2)
+
+            icon_label = ctk.CTkLabel(btn_frame, text=icon, width=30, font=FONTS["body"],
+                text_color=COLORS["text_secondary"])
+            icon_label.pack(side="left", padx=(8, 0))
+
+            btn = ctk.CTkButton(btn_frame, text=label, font=FONTS["body"], height=40,
+                fg_color="transparent", hover_color=COLORS["bg_card"],
+                text_color=COLORS["text_secondary"], anchor="w", corner_radius=8,
+                command=lambda l=label: self.select_tab(l))
+            btn.pack(side="left", fill="x", expand=True)
+
+            self.nav_buttons[label] = {"frame": btn_frame, "icon": icon_label, "btn": btn}
 
         # Bottom section: API status
         spacer = ctk.CTkFrame(sidebar, fg_color="transparent")
@@ -180,17 +183,15 @@ class StudyForgeApp(ctk.CTk):
                     fc.start_interleaved_review()
 
         # Update nav button styles
-        for name, btn in self.nav_buttons.items():
+        for name, widgets in self.nav_buttons.items():
             if name == tab_name:
-                btn.configure(
-                    fg_color=COLORS["accent"],
-                    text_color=COLORS["text_primary"]
-                )
+                widgets["frame"].configure(fg_color=COLORS["accent"])
+                widgets["icon"].configure(text_color=COLORS["text_primary"])
+                widgets["btn"].configure(fg_color=COLORS["accent"], text_color=COLORS["text_primary"])
             else:
-                btn.configure(
-                    fg_color="transparent",
-                    text_color=COLORS["text_secondary"]
-                )
+                widgets["frame"].configure(fg_color="transparent")
+                widgets["icon"].configure(text_color=COLORS["text_secondary"])
+                widgets["btn"].configure(fg_color="transparent", text_color=COLORS["text_secondary"])
 
     def update_api_indicator(self, connected: bool):
         """Called by Settings tab when API connection changes."""
