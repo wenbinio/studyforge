@@ -169,10 +169,11 @@ def get_note(note_id):
 
 
 def update_note(note_id, title=None, content=None, tags=None):
-    note = get_note(note_id)
-    if not note:
-        return
     with get_connection() as conn:
+        note = conn.execute("SELECT * FROM notes WHERE id = ?", (note_id,)).fetchone()
+        if not note:
+            return
+        note = dict(note)
         conn.execute(
             "UPDATE notes SET title=?, content=?, tags=?, updated_at=? WHERE id=?",
             (
@@ -379,10 +380,11 @@ def get_hypothetical(hyp_id):
         return dict(row) if row else None
 
 def update_hypothetical(hyp_id, response=None, grade=None, feedback=None):
-    hyp = get_hypothetical(hyp_id)
-    if not hyp:
-        return
     with get_connection() as conn:
+        hyp = conn.execute("SELECT * FROM hypotheticals WHERE id=?", (hyp_id,)).fetchone()
+        if not hyp:
+            return
+        hyp = dict(hyp)
         conn.execute("UPDATE hypotheticals SET response=?, grade=?, feedback=? WHERE id=?",
             (response if response is not None else hyp["response"],
              grade if grade is not None else hyp["grade"],
@@ -414,10 +416,11 @@ def get_essay(essay_id):
         return dict(row) if row else None
 
 def update_essay(essay_id, content=None, grade=None, feedback=None):
-    essay = get_essay(essay_id)
-    if not essay:
-        return
     with get_connection() as conn:
+        essay = conn.execute("SELECT * FROM essays WHERE id=?", (essay_id,)).fetchone()
+        if not essay:
+            return
+        essay = dict(essay)
         conn.execute("UPDATE essays SET content=?, grade=?, feedback=?, updated_at=? WHERE id=?",
             (content if content is not None else essay["content"],
              grade if grade is not None else essay["grade"],

@@ -19,7 +19,7 @@ else:
     PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, PROJECT_DIR)
 
-from paths import get_config_path, ensure_config_exists, get_user_data_dir
+from paths import get_config_path, ensure_config_exists, get_user_data_dir, DEFAULT_CONFIG
 from database import init_db
 from claude_client import ClaudeStudyClient
 from ui.app import StudyForgeApp
@@ -27,16 +27,7 @@ from ui.app import StudyForgeApp
 
 def load_config() -> dict:
     """Load configuration from user data directory."""
-    default_config = {
-        "claude_api_key": "YOUR_API_KEY_HERE",
-        "claude_model": "claude-sonnet-4-5-20250929",
-        "pomodoro_work_minutes": 25,
-        "pomodoro_short_break": 5,
-        "pomodoro_long_break": 15,
-        "pomodoro_sessions_before_long_break": 4,
-        "daily_new_cards_limit": 20,
-        "theme": "dark",
-    }
+    default_config = dict(DEFAULT_CONFIG)
 
     config_path = ensure_config_exists()
 

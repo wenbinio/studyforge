@@ -16,16 +16,20 @@ def review_card(card: dict, rating: int) -> dict:
     ef = max(1.3, ef)
 
     if rating < 3:
-        reps = 0; interval = 0
-    else:
-        if reps == 0: interval = 1
-        elif reps == 1: interval = 6
-        else: interval = round(interval * ef)
-        reps += 1
-
-    next_review = (date.today() + timedelta(days=max(interval, 1))).isoformat()
-    if rating < 3:
+        # Failed — reset and show again today
+        reps = 0
+        interval = 0
         next_review = date.today().isoformat()
+    else:
+        # Passed — advance interval
+        if reps == 0:
+            interval = 1
+        elif reps == 1:
+            interval = 6
+        else:
+            interval = round(interval * ef)
+        reps += 1
+        next_review = (date.today() + timedelta(days=max(interval, 1))).isoformat()
 
     update_flashcard_srs(card["id"], ef, interval, reps, next_review)
     log_review(card["id"], rating)
