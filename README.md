@@ -26,6 +26,10 @@ A simplified version with one-click launcher:
 - **Flashcards + SRS** — Anki-style spaced repetition using SM-2 algorithm
 - **Active Recall Quiz** — AI-generated quiz questions from lecture notes
 - **Notes Manager** — Import and manage `.txt`, `.md`, `.pdf`, `.docx` files
+- **Notepad** — Rich text editor with markdown formatting and focus mode
+- **Essays** — Essay writing with rubric upload and AI grading
+- **Hypotheticals** — AI-generated legal hypothetical scenarios from your notes
+- **Class Participation** — AI-generated discussion questions for class prep
 - **Claude AI Integration** — Auto-generate flashcards, quizzes, and explanations
 - **Dashboard** — Daily stats, streak tracking, review forecasts
 
