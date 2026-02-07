@@ -14,8 +14,9 @@ def extract_text(filepath: str) -> str:
     elif ext == ".pdf":
         try:
             import fitz
-            doc = fitz.open(filepath)
-            t = "\n".join(p.get_text() for p in doc); doc.close(); return t.strip()
+            with fitz.open(filepath) as doc:
+                t = "\n".join(p.get_text() for p in doc)
+            return t.strip()
         except ImportError: return "[PyMuPDF not installed]"
     elif ext == ".docx":
         try:
