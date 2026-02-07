@@ -97,12 +97,17 @@ class StudyForgeApp(ctk.CTk):
             icon_label.pack(side="left", padx=(8, 0))
 
             btn = ctk.CTkButton(btn_frame, text=label, font=FONTS["body"], height=40,
-                fg_color="transparent", hover_color=COLORS["bg_hover"],
+                fg_color="transparent", hover=False,
                 text_color=COLORS["text_secondary"], anchor="w", corner_radius=8,
                 command=lambda l=label: self.select_tab(l))
             btn.pack(side="left", fill="x", expand=True)
 
             self.nav_buttons[label] = {"frame": btn_frame, "icon": icon_label, "btn": btn}
+
+            # Full-row hover: bind Enter/Leave on frame and children
+            for widget in (btn_frame, icon_label, btn):
+                widget.bind("<Enter>", lambda e, l=label: self._on_nav_enter(l))
+                widget.bind("<Leave>", lambda e, l=label: self._on_nav_leave(l))
 
         # Bottom section: API status
         spacer = ctk.CTkFrame(sidebar, fg_color="transparent")
@@ -155,6 +160,28 @@ class StudyForgeApp(ctk.CTk):
                 subprocess.Popen(["xdg-open", path])
         except Exception:
             pass
+
+    def _on_nav_enter(self, label):
+        """Highlight full nav row on hover."""
+        if label != self.current_tab:
+            widgets = self.nav_buttons[label]
+            widgets["frame"].configure(fg_color=COLORS["bg_hover"])
+            widgets["icon"].configure(text_color=COLORS["text_primary"])
+            widgets["btn"].configure(fg_color=COLORS["bg_hover"])
+
+    def _on_nav_leave(self, label):
+        """Un-highlight nav row when mouse leaves the row area."""
+        if label != self.current_tab:
+            frame = self.nav_buttons[label]["frame"]
+            # Avoid event bubbling: only un-highlight if pointer left the row
+            x, y = frame.winfo_pointerxy()
+            fx, fy = frame.winfo_rootx(), frame.winfo_rooty()
+            if fx <= x < fx + frame.winfo_width() and fy <= y < fy + frame.winfo_height():
+                return
+            widgets = self.nav_buttons[label]
+            widgets["frame"].configure(fg_color="transparent")
+            widgets["icon"].configure(text_color=COLORS["text_secondary"])
+            widgets["btn"].configure(fg_color="transparent")
 
     def select_tab(self, tab_name: str):
         """Switch to the specified tab."""
