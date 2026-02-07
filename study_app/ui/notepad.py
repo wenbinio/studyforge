@@ -70,7 +70,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Formatting toolbar ────────────────────────────────────
         toolbar = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8, height=40)
-        toolbar.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 5))
+        toolbar.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 0))
 
         fmt_buttons = [
             ("H1", lambda: self._insert_prefix("# ")),
@@ -115,7 +115,6 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Title entry ───────────────────────────────────────────
         title_frame = ctk.CTkFrame(self, fg_color="transparent")
-        toolbar.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 0))
         title_frame.grid(row=2, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 5))
 
         self.title_entry = ctk.CTkEntry(
