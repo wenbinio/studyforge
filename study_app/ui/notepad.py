@@ -24,7 +24,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Header row ────────────────────────────────────────────
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", pady=(PADDING["page"], 5))
+        header.grid(row=0, column=0, sticky="ew", padx=PADDING["page"], pady=(PADDING["page"], 5))
 
         ctk.CTkLabel(
             header, text="✏️ Notepad",
@@ -80,7 +80,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Formatting toolbar ────────────────────────────────────
         toolbar = ctk.CTkFrame(self, fg_color=COLORS["bg_secondary"], corner_radius=8, height=40)
-        toolbar.grid(row=1, column=0, sticky="ew", pady=(0, 0))
+        toolbar.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 0))
 
         fmt_buttons = [
             ("H1", lambda: self._insert_prefix("# ")),
@@ -126,7 +126,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Title entry ───────────────────────────────────────────
         title_frame = ctk.CTkFrame(self, fg_color="transparent")
-        title_frame.grid(row=2, column=0, sticky="ew", pady=(0, 5))
+        title_frame.grid(row=2, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 5))
 
         self.title_entry = ctk.CTkEntry(
             title_frame, placeholder_text="Note title...",
@@ -138,7 +138,7 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Note selector row ────────────────────────────────────
         selector_frame = ctk.CTkFrame(self, fg_color="transparent")
-        selector_frame.grid(row=3, column=0, sticky="ew", pady=(0, 5))
+        selector_frame.grid(row=3, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 5))
 
         ctk.CTkLabel(
             selector_frame, text="📂 Open:", font=FONTS["small"],
@@ -174,7 +174,7 @@ class NotepadTab(ctk.CTkFrame):
         self.grid_rowconfigure(4, weight=1)
 
         self.editor_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.editor_frame.grid(row=4, column=0, sticky="nsew", pady=(0, PADDING["page"]))
+        self.editor_frame.grid(row=4, column=0, sticky="nsew", padx=PADDING["page"], pady=(0, PADDING["page"]))
         self.editor_frame.grid_columnconfigure(0, weight=0)  # navigator (fixed width)
         self.editor_frame.grid_columnconfigure(1, weight=1)  # editor
         self.editor_frame.grid_columnconfigure(2, weight=0)  # preview (shown dynamically)
