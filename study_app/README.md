@@ -13,6 +13,10 @@ A comprehensive desktop study application combining **Pomodoro Timer**, **Active
 | **Interleaved Practice** | Shuffle flashcards and quizzes across topics for deeper learning |
 | **Active Recall Quizzer** | AI-generated quiz questions from your lecture notes |
 | **Notes Manager** | Import `.txt`, `.md`, `.pdf`, `.docx` lecture notes; tag and search |
+| **Notepad** | Rich text editor with markdown formatting, preview, and focus mode |
+| **Essays** | Essay writing with rubric upload and AI grading |
+| **Hypotheticals** | AI-generated legal hypothetical scenarios from your notes |
+| **Class Participation** | AI-generated discussion questions for class preparation |
 | **Claude AI Engine** | Auto-generates flashcards, quiz questions, and explanations from notes |
 | **Dashboard** | Daily stats, streak tracking, cards due, upcoming reviews |
 
@@ -110,6 +114,10 @@ study_app/
 │   ├── flashcards.py       # Flashcard review + creation tab
 │   ├── notes.py            # Notes manager tab
 │   ├── quiz.py             # Active recall quiz tab
+│   ├── notepad.py          # Rich text editor with focus mode
+│   ├── essays.py           # Essay writing with AI grading
+│   ├── hypotheticals.py    # Legal hypothetical scenarios
+│   ├── participation.py    # Class participation questions
 │   └── styles.py           # Shared theme + styling constants
 └── data/
     └── studyforge.db       # Auto-created SQLite database
