@@ -11,9 +11,11 @@
 
 A comprehensive Windows desktop application that combines proven study techniques with AI-powered features to supercharge your learning.
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Documentation](#documentation)
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Documentation](#documentation) • [Comparison](#other-implementations)
 
 </div>
+
+> **Note:** This is the **C# WPF implementation** of StudyForge. For Python-based versions, see the [comparison guide](COMPARISON.md).
 
 ---
 
@@ -253,6 +255,25 @@ Future features planned:
 - [ ] Voice recording for audio flashcards
 - [ ] Image support for visual learning
 - [ ] Custom themes and appearance
+- [ ] Active Recall Quiz tab (like Python versions)
+- [ ] 7-day review forecast
+
+---
+
+## 🔄 Other Implementations
+
+StudyForge has **three different implementations** to suit different needs:
+
+1. **C# WPF** (this branch) - Windows native, polished UI, best performance
+2. **Python Tkinter v1** - Single executable, cross-platform potential
+3. **Python Tkinter v2** - Easy setup wizard, rapid development
+
+See the [**detailed comparison guide**](COMPARISON.md) to choose the best version for your needs.
+
+**Quick Decision Guide:**
+- Want the most polished Windows app? → **Use this C# version**
+- Need a single .exe without dependencies? → Check `study_app` on `copilot/extract-files-within` branch
+- Prefer easy Python development? → Check `study_app_v2` on `copilot/extract-files-within` branch
 
 ---
 
