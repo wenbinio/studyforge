@@ -8,6 +8,10 @@ from ui.styles import COLORS, FONTS, PAD
 import database as db
 import config_manager as cfg
 
+DEFAULT_HEIGHT_RATIO = 0.35
+ESSAY_HEIGHT_RATIO = 0.4
+FEEDBACK_HEIGHT_RATIO = 0.3
+
 
 def extract_rubric_text(filepath: str) -> str:
     """Extract text from a rubric file (.txt, .md, .pdf, .docx)."""
@@ -118,6 +122,18 @@ class EssaysTab(ctk.CTkFrame):
         self.content_f.pack(fill="both", expand=True, padx=PAD["page"], pady=(0, PAD["page"]))
 
         self._show_history()
+
+    def _get_window_height(self):
+        """Return the window height, falling back to screen height before render."""
+        window = self.winfo_toplevel()
+        height = window.winfo_height()
+        if height <= 1:
+            height = window.winfo_screenheight()
+        return height
+
+    def _responsive_height(self, base_height, ratio=DEFAULT_HEIGHT_RATIO):
+        """Return a responsive height that stays above the base height."""
+        return max(base_height, int(self._get_window_height() * ratio))
 
     def _save_model(self, value):
         model = "" if value == "(use default)" else value
@@ -271,9 +287,10 @@ class EssaysTab(ctk.CTkFrame):
         ctk.CTkLabel(ec, text="📝 Your Essay", font=FONTS["subheading"],
             text_color=COLORS["text_primary"]).pack(padx=PAD["section"], pady=(PAD["section"], 4), anchor="w")
 
+        essay_h = self._responsive_height(250, ratio=ESSAY_HEIGHT_RATIO)
         self.essay_tb = ctk.CTkTextbox(ec, fg_color=COLORS["bg_input"],
             text_color=COLORS["text_primary"], font=FONTS["body"], wrap="word",
-            corner_radius=8, height=250)
+            corner_radius=8, height=essay_h)
         if essay.get("content"):
             self.essay_tb.insert("1.0", essay["content"])
         self.essay_tb.pack(fill="x", padx=PAD["section"], pady=(0, 8))
@@ -367,8 +384,9 @@ class EssaysTab(ctk.CTkFrame):
         ctk.CTkLabel(fc, text=f"📊 Grade: {grade}", font=FONTS["subheading"],
             text_color=color).pack(padx=PAD["section"], pady=(PAD["section"], 4), anchor="w")
         if essay.get("feedback"):
+            fb_h = self._responsive_height(250, ratio=FEEDBACK_HEIGHT_RATIO)
             fb_tb = ctk.CTkTextbox(fc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
-                font=FONTS["body"], wrap="word", corner_radius=8, height=250)
+                font=FONTS["body"], wrap="word", corner_radius=8, height=fb_h)
             fb_tb.insert("1.0", essay["feedback"])
             fb_tb.configure(state="disabled")
             fb_tb.pack(fill="x", padx=PAD["section"], pady=(0, PAD["section"]))
