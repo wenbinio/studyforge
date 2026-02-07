@@ -8,7 +8,20 @@ When running as frozen .exe: User data goes to %APPDATA%/StudyForge,
 
 import os
 import sys
+import json
 import shutil
+
+
+DEFAULT_CONFIG = {
+    "claude_api_key": "YOUR_API_KEY_HERE",
+    "claude_model": "claude-sonnet-4-5-20250929",
+    "pomodoro_work_minutes": 25,
+    "pomodoro_short_break": 5,
+    "pomodoro_long_break": 15,
+    "pomodoro_sessions_before_long_break": 4,
+    "daily_new_cards_limit": 20,
+    "theme": "dark",
+}
 
 
 def is_frozen() -> bool:
@@ -68,17 +81,6 @@ def ensure_config_exists():
             shutil.copy2(bundled_config, config_path)
         else:
             # Write a fresh default
-            import json
-            default = {
-                "claude_api_key": "YOUR_API_KEY_HERE",
-                "claude_model": "claude-sonnet-4-5-20250929",
-                "pomodoro_work_minutes": 25,
-                "pomodoro_short_break": 5,
-                "pomodoro_long_break": 15,
-                "pomodoro_sessions_before_long_break": 4,
-                "daily_new_cards_limit": 20,
-                "theme": "dark",
-            }
             with open(config_path, "w") as f:
-                json.dump(default, f, indent=2)
+                json.dump(DEFAULT_CONFIG, f, indent=2)
     return config_path

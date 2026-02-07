@@ -28,7 +28,7 @@ class ClaudeStudyClient:
             si, ei = text.find(s), text.rfind(e)
             if si != -1 and ei > si:
                 try: return json.loads(text[si:ei+1])
-                except: continue
+                except json.JSONDecodeError: continue
         return None
 
     def generate_flashcards(self, note_content: str, count: int = 10, context: str = "") -> list:
