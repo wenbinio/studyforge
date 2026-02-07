@@ -1,0 +1,224 @@
+"""
+claude_client.py — Claude API integration for StudyForge.
+
+Generates flashcards, quiz questions, explanations, and summaries
+from lecture notes using the Anthropic Claude API.
+"""
+
+import json
+import re
+from anthropic import Anthropic
+
+
+class ClaudeStudyClient:
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929"):
+        self.client = Anthropic(api_key=api_key)
+        self.model = model
+
+    def _call(self, system: str, user_msg: str, max_tokens: int = 4096) -> str:
+        response = self.client.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user_msg}]
+        )
+        return response.content[0].text
+
+    def _parse_json_response(self, text: str) -> list | dict | None:
+        """Extract JSON from a response that may contain markdown fences."""
+        text = text.strip()
+        # Try to find JSON in code fences
+        match = re.search(r'```(?:json)?\s*\n?(.*?)\n?\s*```', text, re.DOTALL)
+        if match:
+            text = match.group(1).strip()
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Try to find array or object
+            for start_char, end_char in [('[', ']'), ('{', '}')]:
+                start = text.find(start_char)
+                end = text.rfind(end_char)
+                if start != -1 and end != -1 and end > start:
+                    try:
+                        return json.loads(text[start:end + 1])
+                    except json.JSONDecodeError:
+                        continue
+            return None
+
+    def generate_flashcards(self, note_content: str, count: int = 10, context: str = "") -> list[dict]:
+        """
+        Generate flashcards from note content.
+        Returns list of dicts: [{"front": "...", "back": "..."}, ...]
+        """
+        system = (
+            "You are an expert study assistant that creates high-quality flashcards. "
+            "You focus on key concepts, definitions, relationships, and application-level understanding. "
+            "Each card should test ONE specific piece of knowledge. "
+            "You MUST respond with ONLY a valid JSON array — no commentary, no markdown."
+        )
+        prompt = f"""Create exactly {count} flashcards from the following lecture notes.
+
+Rules:
+- Front: A clear, specific question or prompt (not vague)
+- Back: A concise, complete answer
+- Mix difficulty levels: definitions, comparisons, applications, edge cases
+- Focus on what a student would need for exams
+{f"- Context/subject: {context}" if context else ""}
+
+Respond ONLY with a JSON array: [{{"front": "...", "back": "..."}}, ...]
+
+--- NOTES ---
+{note_content[:8000]}
+"""
+        result = self._call(system, prompt)
+        parsed = self._parse_json_response(result)
+        if isinstance(parsed, list):
+            return [c for c in parsed if "front" in c and "back" in c]
+        return []
+
+    def generate_quiz(self, note_content: str, count: int = 5, difficulty: str = "mixed") -> list[dict]:
+        """
+        Generate multiple-choice quiz questions.
+        Returns list: [{"question": "...", "options": ["A","B","C","D"], "correct": 0, "explanation": "..."}, ...]
+        """
+        system = (
+            "You are an expert exam question writer. You create rigorous multiple-choice questions "
+            "that test deep understanding, not just surface recall. "
+            "You MUST respond with ONLY a valid JSON array — no commentary, no markdown."
+        )
+        prompt = f"""Create exactly {count} multiple-choice questions from these notes.
+Difficulty: {difficulty}
+
+Rules:
+- 4 options each (A, B, C, D)
+- "correct" is the 0-indexed position of the right answer
+- Include a brief explanation for the correct answer
+- Make distractors plausible — test real understanding
+- Vary question types: factual, conceptual, application, analysis
+
+Respond ONLY with a JSON array:
+[{{"question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "correct": 0, "explanation": "..."}}, ...]
+
+--- NOTES ---
+{note_content[:8000]}
+"""
+        result = self._call(system, prompt)
+        parsed = self._parse_json_response(result)
+        if isinstance(parsed, list):
+            return [q for q in parsed if "question" in q and "options" in q and "correct" in q]
+        return []
+
+    def generate_interleaved_quiz(self, notes: list[dict], count: int = 10, difficulty: str = "mixed") -> list[dict]:
+        """
+        Generate interleaved quiz questions from MULTIPLE notes.
+        notes: list of dicts with "title" and "content" keys.
+        Returns list: [{"question": "...", "options": [...], "correct": 0, "explanation": "...", "topic": "..."}, ...]
+        """
+        system = (
+            "You are an expert exam writer specializing in interleaved practice — "
+            "a proven learning technique where questions from different topics are deliberately mixed together "
+            "to strengthen retrieval and discrimination skills. "
+            "You MUST respond with ONLY a valid JSON array — no commentary, no markdown."
+        )
+
+        # Build combined notes with topic labels, budget per note
+        per_note_chars = max(1000, 7000 // len(notes))
+        notes_block = ""
+        topic_names = []
+        for i, note in enumerate(notes):
+            title = note["title"]
+            topic_names.append(title)
+            notes_block += f"\n--- TOPIC {i+1}: {title} ---\n{note['content'][:per_note_chars]}\n"
+
+        prompt = f"""Create exactly {count} interleaved multiple-choice questions drawn from these {len(notes)} topics.
+Difficulty: {difficulty}
+
+INTERLEAVING RULES:
+- Distribute questions across ALL topics as evenly as possible
+- Randomize the topic order — do NOT group questions by topic
+- Include cross-topic comparison questions where topics overlap
+- Each question must have a "topic" field with the source topic name
+
+Rules:
+- 4 options each (A, B, C, D)
+- "correct" is the 0-indexed position of the right answer
+- Include a brief explanation for the correct answer
+- Make distractors plausible — test real understanding
+- The "topic" field must match one of: {topic_names}
+
+Respond ONLY with a JSON array:
+[{{"question": "...", "options": ["A. ...", "B. ...", "C. ...", "D. ..."], "correct": 0, "explanation": "...", "topic": "..."}}, ...]
+{notes_block}
+"""
+        result = self._call(system, prompt, max_tokens=4096)
+        parsed = self._parse_json_response(result)
+        if isinstance(parsed, list):
+            return [q for q in parsed if "question" in q and "options" in q and "correct" in q]
+        return []
+
+    def explain_concept(self, concept: str, context: str = "") -> str:
+        """Get a clear explanation of a concept, optionally within a subject context."""
+        system = (
+            "You are a patient, expert tutor. Explain concepts clearly using analogies, "
+            "examples, and structured reasoning. Adapt to an undergraduate level."
+        )
+        prompt = f"""Explain this concept clearly and thoroughly:
+
+**{concept}**
+
+{f"Subject context: {context}" if context else ""}
+
+Use:
+- A clear one-line definition first
+- Then a deeper explanation with an analogy or example
+- Key distinctions or common misconceptions
+- Keep it under 300 words
+"""
+        return self._call(system, prompt, max_tokens=1500)
+
+    def summarize_notes(self, note_content: str) -> str:
+        """Create a structured summary of lecture notes."""
+        system = (
+            "You are an expert academic summarizer. Create concise, structured summaries "
+            "that capture all key concepts, relationships, and important details."
+        )
+        prompt = f"""Summarize these lecture notes. Include:
+
+1. **Key Concepts** — the main ideas (bullet points)
+2. **Important Details** — definitions, formulas, dates, names
+3. **Connections** — how concepts relate to each other
+4. **Potential Exam Topics** — what's most likely to be tested
+
+--- NOTES ---
+{note_content[:10000]}
+"""
+        return self._call(system, prompt, max_tokens=2000)
+
+    def answer_question(self, question: str, note_content: str = "") -> str:
+        """Answer a study question, optionally grounded in specific notes."""
+        system = (
+            "You are a knowledgeable tutor. Answer questions accurately and clearly. "
+            "If notes are provided, ground your answer in them but supplement with your knowledge."
+        )
+        prompt = question
+        if note_content:
+            prompt = f"""Answer this question using the provided notes as primary reference:
+
+Question: {question}
+
+--- REFERENCE NOTES ---
+{note_content[:6000]}
+"""
+        return self._call(system, prompt, max_tokens=2000)
+
+    def test_connection(self) -> tuple[bool, str]:
+        """Test if the API key is valid."""
+        try:
+            response = self.client.messages.create(
+                model=self.model,
+                max_tokens=20,
+                messages=[{"role": "user", "content": "Say 'connected' and nothing else."}]
+            )
+            return True, response.content[0].text.strip()
+        except Exception as e:
+            return False, str(e)

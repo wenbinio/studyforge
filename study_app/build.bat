@@ -1,0 +1,74 @@
+@echo off
+setlocal
+title StudyForge - Build Script
+echo.
+echo  ============================================
+echo    StudyForge - Building standalone .exe
+echo  ============================================
+echo.
+
+:: Check Python is available
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Python is not installed or not in PATH.
+    echo         Download from https://www.python.org/downloads/
+    echo         Make sure to check "Add to PATH" during installation.
+    pause
+    exit /b 1
+)
+
+echo [1/4] Installing dependencies...
+python -m pip install --upgrade pip >nul 2>&1
+python -m pip install -r requirements.txt
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to install requirements. Check your internet connection.
+    pause
+    exit /b 1
+)
+
+echo [2/4] Installing PyInstaller...
+python -m pip install pyinstaller
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to install PyInstaller.
+    pause
+    exit /b 1
+)
+
+echo [3/4] Building StudyForge.exe (this may take 1-3 minutes)...
+echo.
+python -m PyInstaller StudyForge.spec --noconfirm
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Build failed. See errors above.
+    echo         Common fixes:
+    echo         - Close any running StudyForge.exe
+    echo         - Run this script as Administrator
+    echo         - Try: python -m pip install --upgrade pyinstaller
+    pause
+    exit /b 1
+)
+
+echo.
+echo  ============================================
+echo    BUILD SUCCESSFUL!
+echo  ============================================
+echo.
+echo  Your .exe is at:
+echo    dist\StudyForge.exe
+echo.
+echo  First run:
+echo    1. Double-click StudyForge.exe
+echo    2. It will create a config file at:
+echo       %%APPDATA%%\StudyForge\config.json
+echo    3. Edit that file to add your Claude API key
+echo       (get one at console.anthropic.com)
+echo    4. Restart StudyForge - AI features will activate
+echo.
+echo  Your study data (flashcards, notes, stats) is stored at:
+echo    %%APPDATA%%\StudyForge\data\
+echo.
+
+:: Open the dist folder
+explorer dist
+
+pause
