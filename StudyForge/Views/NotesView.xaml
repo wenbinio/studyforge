@@ -1,0 +1,76 @@
+<UserControl x:Class="StudyForge.Views.NotesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" Text="Study Notes" FontSize="32" FontWeight="Bold"/>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="➕ Create Note" Padding="15,10" Margin="5" 
+                       Background="#9B59B6" Foreground="White" BorderThickness="0" 
+                       FontSize="14" Cursor="Hand" Click="CreateNote_Click"/>
+                <Button Content="🤖 Generate Cards" Padding="15,10" Margin="5" 
+                       Background="#3498DB" Foreground="White" BorderThickness="0" 
+                       FontSize="14" Cursor="Hand" Click="GenerateCards_Click"
+                       ToolTip="Use AI to generate flashcards from selected note"/>
+            </StackPanel>
+        </Grid>
+        
+        <!-- Notes List -->
+        <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="20">
+            <ListBox x:Name="NotesList" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#F8F9FA" Padding="15" Margin="0,5" CornerRadius="5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="16" TextWrapping="Wrap"/>
+                                    <TextBlock Text="{Binding Content}" FontSize="12" Foreground="Gray" 
+                                              Margin="0,5,0,0" TextWrapping="Wrap" MaxHeight="60" TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Border Background="#9B59B6" CornerRadius="3" Padding="5,2" Margin="0,0,5,0">
+                                            <TextBlock Text="{Binding Category}" FontSize="10" Foreground="White"/>
+                                        </Border>
+                                        <TextBlock FontSize="10" Foreground="Gray">
+                                            <Run Text="Modified:"/>
+                                            <Run Text="{Binding ModifiedDate, StringFormat='dd MMM yyyy'}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="✏️" Width="30" Height="30" Margin="5" 
+                                           Background="#F39C12" Foreground="White" BorderThickness="0" 
+                                           Cursor="Hand" Click="EditNote_Click" Tag="{Binding}"/>
+                                    <Button Content="🗑️" Width="30" Height="30" Margin="5" 
+                                           Background="#E74C3C" Foreground="White" BorderThickness="0" 
+                                           Cursor="Hand" Click="DeleteNote_Click" Tag="{Binding}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+    </Grid>
+</UserControl>
