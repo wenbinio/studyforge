@@ -195,7 +195,7 @@ def get_today_stats():
 def increment_daily_stat(field, amount=1):
     # Validate field against whitelist to prevent SQL injection
     if field not in VALID_STAT_FIELDS:
-        raise ValueError(f"Invalid stat field: {field}. Must be one of: {VALID_STAT_FIELDS}")
+        raise ValueError(f"Invalid stat field: {field}. Must be one of: {', '.join(sorted(VALID_STAT_FIELDS))}")
     with get_connection() as conn:
         today = date.today().isoformat()
         conn.execute(f"""INSERT INTO daily_stats (date, {field}) VALUES (?, ?)
