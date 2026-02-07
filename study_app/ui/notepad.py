@@ -99,8 +99,12 @@ class NotepadTab(ctk.CTkFrame):
                 )
             else:
                 is_heading = text in ("H1", "H2", "H3")
-                is_style = text in ("B", "I", "~~")
-                btn_font = ("Segoe UI", 12, "bold") if (is_heading or text == "B") else ("Segoe UI", 12, "italic") if text == "I" else FONTS["small"]
+                if is_heading or text == "B":
+                    btn_font = ("Segoe UI", 12, "bold")
+                elif text == "I":
+                    btn_font = ("Segoe UI", 12, "italic")
+                else:
+                    btn_font = FONTS["small"]
                 ctk.CTkButton(
                     toolbar, text=text, width=max(36, len(text) * 10 + 10), height=28,
                     font=btn_font, fg_color="transparent",
@@ -111,8 +115,6 @@ class NotepadTab(ctk.CTkFrame):
 
         # ── Title entry ───────────────────────────────────────────
         title_frame = ctk.CTkFrame(self, fg_color="transparent")
-        title_frame.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(45, 5))
-        # Re-grid: put title below toolbar
         toolbar.grid(row=1, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 0))
         title_frame.grid(row=2, column=0, sticky="ew", padx=PADDING["page"], pady=(0, 5))
 
