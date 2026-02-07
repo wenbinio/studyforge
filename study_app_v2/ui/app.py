@@ -6,7 +6,6 @@ from ui.dashboard import DashboardTab
 from ui.pomodoro import PomodoroTab
 from ui.flashcards import FlashcardsTab
 from ui.notes import NotesTab
-from ui.notepad import NotepadTab
 from ui.quiz import QuizTab
 from ui.hypotheticals import HypotheticalsTab
 from ui.essays import EssaysTab
@@ -82,7 +81,7 @@ class StudyForgeApp(ctk.CTk):
 
         nav = [
             ("📊", "Dashboard"), ("🍅", "Pomodoro"), ("🧠", "Flashcards"),
-            ("📝", "Notes"), ("✏️", "Notepad"), ("❓", "Quiz"),
+            ("📝", "Notes"), ("❓", "Quiz"),
             ("⚖️", "Hypotheticals"), ("📜", "Essays"), ("🎓", "Participation"),
             ("⚙️", "Settings"),
         ]
@@ -127,7 +126,6 @@ class StudyForgeApp(ctk.CTk):
         self.tabs["Pomodoro"] = PomodoroTab(self.content_area, self)
         self.tabs["Flashcards"] = FlashcardsTab(self.content_area, self)
         self.tabs["Notes"] = NotesTab(self.content_area, self)
-        self.tabs["Notepad"] = NotepadTab(self.content_area, self)
         self.tabs["Quiz"] = QuizTab(self.content_area, self)
         self.tabs["Hypotheticals"] = HypotheticalsTab(self.content_area, self)
         self.tabs["Essays"] = EssaysTab(self.content_area, self)
@@ -145,8 +143,6 @@ class StudyForgeApp(ctk.CTk):
             self.current_tab = tab_name
             if tab_name == "Dashboard":
                 self.tabs["Dashboard"].refresh()
-            elif tab_name == "Notepad":
-                self.tabs["Notepad"].refresh()
 
         for name, widgets in self.nav_buttons.items():
             if name == tab_name:
@@ -168,13 +164,13 @@ class StudyForgeApp(ctk.CTk):
             self.api_hint.configure(text="Click Settings to configure")
 
     def toggle_focus_mode(self):
-        """Toggle sidebar visibility for distraction-free notepad writing."""
+        """Toggle sidebar visibility for distraction-free writing."""
         self.focus_mode = not self.focus_mode
         if self.focus_mode:
             self.sidebar.grid_forget()
         else:
             self.sidebar.grid(row=0, column=0, sticky="ns")
 
-        notepad = self.tabs.get("Notepad")
-        if notepad:
-            notepad.update_focus_btn(self.focus_mode)
+        notes = self.tabs.get("Notes")
+        if notes:
+            notes.update_focus_btn(self.focus_mode)

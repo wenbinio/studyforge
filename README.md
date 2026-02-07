@@ -25,8 +25,7 @@ A simplified version with one-click launcher:
 - **Pomodoro Timer** — Configurable work/break intervals with session tracking
 - **Flashcards + SRS** — Anki-style spaced repetition using SM-2 algorithm
 - **Active Recall Quiz** — AI-generated quiz questions from lecture notes
-- **Notes Manager** — Import and manage `.txt`, `.md`, `.pdf`, `.docx` files
-- **Notepad** — Rich text editor with markdown formatting and focus mode
+- **Notes Manager** — Import and manage `.txt`, `.md`, `.pdf`, `.docx` files with rich markdown editing, preview, and focus mode
 - **Essays** — Essay writing with rubric upload and AI grading
 - **Hypotheticals** — AI-generated legal hypothetical scenarios from your notes
 - **Class Participation** — AI-generated discussion questions for class prep

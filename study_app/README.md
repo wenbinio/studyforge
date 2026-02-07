@@ -12,8 +12,7 @@ A comprehensive desktop study application combining **Pomodoro Timer**, **Active
 | **Flashcards + SRS** | Anki-style spaced repetition using the SM-2 algorithm |
 | **Interleaved Practice** | Shuffle flashcards and quizzes across topics for deeper learning |
 | **Active Recall Quizzer** | AI-generated quiz questions from your lecture notes |
-| **Notes Manager** | Import `.txt`, `.md`, `.pdf`, `.docx` lecture notes; tag and search |
-| **Notepad** | Rich text editor with markdown formatting, preview, and focus mode |
+| **Notes Manager** | Import `.txt`, `.md`, `.pdf`, `.docx` lecture notes; tag, search, rich markdown editing, preview, and focus mode |
 | **Essays** | Essay writing with rubric upload and AI grading |
 | **Hypotheticals** | AI-generated legal hypothetical scenarios from your notes |
 | **Class Participation** | AI-generated discussion questions for class preparation |
@@ -112,9 +111,8 @@ study_app/
 │   ├── dashboard.py        # Dashboard / home tab
 │   ├── pomodoro.py         # Pomodoro timer tab
 │   ├── flashcards.py       # Flashcard review + creation tab
-│   ├── notes.py            # Notes manager tab
+│   ├── notes.py            # Notes manager with rich editing and focus mode
 │   ├── quiz.py             # Active recall quiz tab
-│   ├── notepad.py          # Rich text editor with focus mode
 │   ├── essays.py           # Essay writing with AI grading
 │   ├── hypotheticals.py    # Legal hypothetical scenarios
 │   ├── participation.py    # Class participation questions

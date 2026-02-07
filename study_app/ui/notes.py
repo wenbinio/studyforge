@@ -1,11 +1,13 @@
 """
 notes.py — Notes Manager tab for StudyForge.
 Import .txt, .md, .pdf, .docx files; view, tag, search, and manage notes.
+Includes rich markdown editing, preview, navigator, and focus mode.
 """
 
 import customtkinter as ctk
 import threading
 import os
+import re
 from tkinter import filedialog
 from ui.styles import COLORS, FONTS, PADDING
 import database as db
@@ -48,6 +50,8 @@ class NotesTab(ctk.CTkFrame):
         self.app = app_ref
         self.selected_note_id = None
         self._ai_request_id = 0  # Guard against race conditions in async AI calls
+        self.preview_visible = False
+        self.nav_visible = False
         self.build_ui()
 
     def build_ui(self):
@@ -56,12 +60,21 @@ class NotesTab(ctk.CTkFrame):
         header.pack(fill="x", padx=PADDING["page"], pady=(PADDING["page"], 5))
 
         ctk.CTkLabel(
-            header, text="📝 Notes Manager",
+            header, text="📝 Notes",
             font=FONTS["heading"], text_color=COLORS["text_primary"]
         ).pack(side="left")
 
         btn_row = ctk.CTkFrame(header, fg_color="transparent")
         btn_row.pack(side="right")
+
+        # Focus mode button
+        self.focus_btn = ctk.CTkButton(
+            btn_row, text="🖥️ Focus Mode", width=120, height=34,
+            font=FONTS["body"], fg_color=COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=8,
+            command=self._toggle_focus_mode
+        )
+        self.focus_btn.pack(side="left", padx=4)
 
         ctk.CTkButton(
             btn_row, text="📂 Import File", width=120, height=34,
@@ -203,6 +216,26 @@ class NotesTab(ctk.CTkFrame):
             corner_radius=6, command=lambda: self._delete_note(note_id)
         ).pack(side="left", padx=2)
 
+        # Preview toggle
+        self.preview_btn = ctk.CTkButton(
+            title_bar, text="👁️ Preview", width=90, height=32,
+            font=FONTS["small"],
+            fg_color=COLORS["accent"] if self.preview_visible else COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=6,
+            command=self._toggle_preview
+        )
+        self.preview_btn.pack(side="left", padx=2)
+
+        # Navigator toggle
+        self.nav_btn = ctk.CTkButton(
+            title_bar, text="Navigator", width=90, height=32,
+            font=FONTS["small"],
+            fg_color=COLORS["accent"] if self.nav_visible else COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=6,
+            command=self._toggle_navigator
+        )
+        self.nav_btn.pack(side="left", padx=2)
+
         # Tags
         tags_frame = ctk.CTkFrame(self.viewer_frame, fg_color="transparent")
         tags_frame.pack(fill="x", padx=PADDING["section"], pady=(0, 5))
@@ -239,15 +272,90 @@ class NotesTab(ctk.CTkFrame):
             corner_radius=6, command=lambda: self._ask_about_note(note)
         ).pack(side="left", padx=2)
 
+        # Formatting toolbar
+        toolbar = ctk.CTkFrame(self.viewer_frame, fg_color=COLORS["bg_secondary"], corner_radius=8, height=36)
+        toolbar.pack(fill="x", padx=PADDING["section"], pady=(0, 5))
+
+        fmt_buttons = [
+            ("H1", lambda: self._insert_prefix("# ")),
+            ("H2", lambda: self._insert_prefix("## ")),
+            ("H3", lambda: self._insert_prefix("### ")),
+            ("|", None),
+            ("B", lambda: self._wrap_selection("**")),
+            ("I", lambda: self._wrap_selection("*")),
+            ("~~", lambda: self._wrap_selection("~~")),
+            ("|", None),
+            ("• List", lambda: self._insert_prefix("- ")),
+            ("1. List", lambda: self._insert_prefix("1. ")),
+            ("☑ Task", lambda: self._insert_prefix("- [ ] ")),
+            ("|", None),
+            ("`Code`", lambda: self._wrap_selection("`")),
+            ("```", self._insert_code_block),
+            ("> Quote", lambda: self._insert_prefix("> ")),
+            ("---", lambda: self._insert_line("\n---\n")),
+        ]
+
+        for text, cmd in fmt_buttons:
+            if cmd is None:
+                ctk.CTkFrame(toolbar, width=1, height=18, fg_color=COLORS["border"]).pack(
+                    side="left", padx=4, pady=7
+                )
+            else:
+                if text in ("H1", "H2", "H3") or text == "B":
+                    btn_font = ("Segoe UI", 11, "bold")
+                elif text == "I":
+                    btn_font = ("Segoe UI", 11, "italic")
+                else:
+                    btn_font = FONTS["small"]
+                ctk.CTkButton(
+                    toolbar, text=text, width=max(32, len(text) * 9 + 8), height=24,
+                    font=btn_font, fg_color="transparent",
+                    hover_color=COLORS["bg_hover"],
+                    text_color=COLORS["text_secondary"], corner_radius=6,
+                    command=cmd
+                ).pack(side="left", padx=1, pady=4)
+
+        # Editor area with optional navigator and preview panels
+        editor_area = ctk.CTkFrame(self.viewer_frame, fg_color="transparent")
+        editor_area.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, PADDING["section"]))
+        editor_area.grid_rowconfigure(0, weight=1)
+        self._editor_area = editor_area
+
+        # Navigator panel
+        self.nav_panel = ctk.CTkScrollableFrame(
+            editor_area, fg_color=COLORS["bg_secondary"],
+            width=160, corner_radius=8,
+            border_color=COLORS["border"], border_width=1
+        )
+
         # Content editor
         self.content_editor = ctk.CTkTextbox(
-            self.viewer_frame, fg_color=COLORS["bg_input"],
-            text_color=COLORS["text_primary"], font=FONTS["body"],
+            editor_area, fg_color=COLORS["bg_input"],
+            text_color=COLORS["text_primary"], font=("Consolas", 13),
             border_color=COLORS["border"], border_width=1, corner_radius=8,
-            wrap="word"
+            wrap="word", undo=True
         )
         self.content_editor.insert("1.0", note["content"])
-        self.content_editor.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, PADDING["section"]))
+
+        # Preview panel
+        self.preview_panel = ctk.CTkTextbox(
+            editor_area, fg_color=COLORS["bg_secondary"],
+            text_color=COLORS["text_primary"], font=FONTS["body"],
+            border_color=COLORS["accent"], border_width=1, corner_radius=8,
+            wrap="word"
+        )
+
+        self._update_editor_layout()
+
+        # Keyboard shortcuts
+        self.content_editor.bind("<Control-b>", lambda e: (self._wrap_selection("**"), "break"))
+        self.content_editor.bind("<Control-i>", lambda e: (self._wrap_selection("*"), "break"))
+        self.content_editor.bind("<Control-k>", lambda e: (self._wrap_selection("`"), "break"))
+        self.content_editor.bind("<Control-s>", lambda e: (self._save_note(note_id), "break"))
+        self.content_editor.bind("<Control-B>", lambda e: (self._wrap_selection("**"), "break"))
+        self.content_editor.bind("<Control-I>", lambda e: (self._wrap_selection("*"), "break"))
+        self.content_editor.bind("<Control-K>", lambda e: (self._wrap_selection("`"), "break"))
+        self.content_editor.bind("<Control-S>", lambda e: (self._save_note(note_id), "break"))
 
         # AI output area
         self.ai_output_label = ctk.CTkLabel(
@@ -255,6 +363,234 @@ class NotesTab(ctk.CTkFrame):
             font=FONTS["small"], text_color=COLORS["text_secondary"],
             wraplength=600, justify="left"
         )
+
+    # ── Editor layout with navigator/preview ─────────────────────
+
+    def _update_editor_layout(self):
+        """Update the editor grid layout based on navigator/preview visibility."""
+        editor_col = 1 if self.nav_visible else 0
+        preview_col = editor_col + 1
+
+        if self.nav_visible:
+            self._refresh_navigator()
+            self.nav_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        else:
+            self.nav_panel.grid_forget()
+
+        self.content_editor.grid(row=0, column=editor_col, sticky="nsew")
+
+        if self.preview_visible:
+            self._render_preview()
+            self.preview_panel.grid(row=0, column=preview_col, sticky="nsew", padx=(5, 0))
+        else:
+            self.preview_panel.grid_forget()
+
+        for col in range(3):
+            self._editor_area.grid_columnconfigure(col, weight=0)
+        self._editor_area.grid_columnconfigure(editor_col, weight=1)
+        if self.preview_visible:
+            self._editor_area.grid_columnconfigure(preview_col, weight=1)
+
+    # ── Formatting helpers ────────────────────────────────────────
+
+    def _insert_prefix(self, prefix):
+        """Insert a prefix at the beginning of the current line."""
+        try:
+            cursor = self.content_editor.index("insert")
+            line = cursor.split(".")[0]
+            line_start = f"{line}.0"
+            line_text = self.content_editor.get(line_start, f"{line}.end")
+            if line_text.startswith(prefix):
+                return
+            self.content_editor.insert(line_start, prefix)
+            self.content_editor.focus_set()
+        except Exception:
+            pass
+
+    def _wrap_selection(self, wrapper):
+        """Wrap the selected text with a marker (e.g., ** for bold)."""
+        try:
+            sel_start = self.content_editor.index("sel.first")
+            sel_end = self.content_editor.index("sel.last")
+            selected = self.content_editor.get(sel_start, sel_end)
+            self.content_editor.delete(sel_start, sel_end)
+            self.content_editor.insert(sel_start, f"{wrapper}{selected}{wrapper}")
+            self.content_editor.focus_set()
+        except Exception:
+            cursor = self.content_editor.index("insert")
+            self.content_editor.insert(cursor, f"{wrapper}{wrapper}")
+            new_pos = self.content_editor.index(f"{cursor} + {len(wrapper)} chars")
+            self.content_editor.mark_set("insert", new_pos)
+            self.content_editor.focus_set()
+
+    def _insert_code_block(self):
+        """Insert a fenced code block."""
+        try:
+            sel_start = self.content_editor.index("sel.first")
+            sel_end = self.content_editor.index("sel.last")
+            selected = self.content_editor.get(sel_start, sel_end)
+            self.content_editor.delete(sel_start, sel_end)
+            self.content_editor.insert(sel_start, f"```\n{selected}\n```")
+        except Exception:
+            cursor = self.content_editor.index("insert")
+            self.content_editor.insert(cursor, "```\n\n```")
+            new_pos = self.content_editor.index(f"{cursor} + 4 chars")
+            self.content_editor.mark_set("insert", new_pos)
+        self.content_editor.focus_set()
+
+    def _insert_line(self, text):
+        """Insert text at the current cursor position."""
+        cursor = self.content_editor.index("insert")
+        self.content_editor.insert(cursor, text)
+        self.content_editor.focus_set()
+
+    # ── Preview ───────────────────────────────────────────────────
+
+    def _toggle_preview(self):
+        """Toggle markdown preview panel side-by-side with editor."""
+        self.preview_visible = not self.preview_visible
+        try:
+            self.preview_btn.configure(
+                fg_color=COLORS["accent"] if self.preview_visible else COLORS["bg_card"]
+            )
+        except Exception:
+            pass
+        self._update_editor_layout()
+
+    def _render_preview(self):
+        """Render markdown content as styled text in the preview panel."""
+        content = self.content_editor.get("1.0", "end").strip()
+        self.preview_panel.configure(state="normal")
+        self.preview_panel.delete("1.0", "end")
+
+        if not content:
+            self.preview_panel.insert("1.0", "Start typing to see preview...")
+            self.preview_panel.configure(state="disabled")
+            return
+
+        rendered = self._markdown_to_display(content)
+        self.preview_panel.insert("1.0", rendered)
+        self.preview_panel.configure(state="disabled")
+
+    def _markdown_to_display(self, text):
+        """Convert markdown to display text with visual formatting cues."""
+        lines = text.split("\n")
+        output = []
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith("#### "):
+                output.append(f"    {stripped[5:]}")
+            elif stripped.startswith("### "):
+                output.append(f"   {stripped[4:].upper()}")
+            elif stripped.startswith("## "):
+                output.append(f"  ━━ {stripped[3:].upper()} ━━")
+            elif stripped.startswith("# "):
+                output.append(f"═══ {stripped[2:].upper()} ═══")
+            elif stripped.startswith("---") or stripped.startswith("***"):
+                output.append("─" * 40)
+            elif stripped.startswith("- [ ] "):
+                output.append(f"  ☐ {stripped[6:]}")
+            elif stripped.startswith("- [x] ") or stripped.startswith("- [X] "):
+                output.append(f"  ☑ {stripped[6:]}")
+            elif stripped.startswith("- "):
+                output.append(f"  • {stripped[2:]}")
+            elif stripped.startswith("> "):
+                output.append(f"  │ {stripped[2:]}")
+            elif stripped.startswith("```"):
+                output.append("  ┌────────────────────")
+            else:
+                display = stripped
+                display = re.sub(r'\*\*(.+?)\*\*', r'[\1]', display)
+                display = re.sub(r'\*(.+?)\*', r'\1', display)
+                display = re.sub(r'~~(.+?)~~', r'\1', display)
+                display = re.sub(r'`(.+?)`', r'⟨\1⟩', display)
+                output.append(display)
+        return "\n".join(output)
+
+    # ── Markdown Navigator ────────────────────────────────────────
+
+    def _toggle_navigator(self):
+        """Toggle the heading navigator panel."""
+        self.nav_visible = not self.nav_visible
+        try:
+            self.nav_btn.configure(
+                fg_color=COLORS["accent"] if self.nav_visible else COLORS["bg_card"]
+            )
+        except Exception:
+            pass
+        self._update_editor_layout()
+
+    def _refresh_navigator(self):
+        """Scan the editor content for headings and populate the navigator."""
+        for w in self.nav_panel.winfo_children():
+            w.destroy()
+
+        ctk.CTkLabel(
+            self.nav_panel, text="Headings",
+            font=FONTS["body_bold"], text_color=COLORS["text_primary"]
+        ).pack(anchor="w", padx=6, pady=(4, 6))
+
+        content = self.content_editor.get("1.0", "end")
+        lines = content.split("\n")
+        found = False
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            level = 0
+            title = ""
+            if stripped.startswith("#### "):
+                level, title = 4, stripped[5:]
+            elif stripped.startswith("### "):
+                level, title = 3, stripped[4:]
+            elif stripped.startswith("## "):
+                level, title = 2, stripped[3:]
+            elif stripped.startswith("# "):
+                level, title = 1, stripped[2:]
+
+            if level and title:
+                found = True
+                indent = (level - 1) * 10
+                line_num = i + 1
+                btn = ctk.CTkButton(
+                    self.nav_panel, text=title[:30],
+                    font=FONTS["small"] if level > 2 else FONTS["body_bold"],
+                    fg_color="transparent", hover_color=COLORS["bg_secondary"],
+                    text_color=COLORS["text_secondary"], anchor="w",
+                    height=24, corner_radius=4,
+                    command=lambda ln=line_num: self._navigate_to_line(ln)
+                )
+                btn.pack(fill="x", padx=(6 + indent, 4), pady=1)
+
+        if not found:
+            ctk.CTkLabel(
+                self.nav_panel, text="No headings found",
+                font=FONTS["small"], text_color=COLORS["text_muted"]
+            ).pack(padx=6, pady=8)
+
+    def _navigate_to_line(self, line_num):
+        """Scroll the editor to a specific line."""
+        pos = f"{line_num}.0"
+        self.content_editor.mark_set("insert", pos)
+        self.content_editor.see(pos)
+        self.content_editor.focus_set()
+
+    # ── Focus Mode ────────────────────────────────────────────────
+
+    def _toggle_focus_mode(self):
+        """Toggle sidebar visibility for distraction-free writing."""
+        self.app.toggle_focus_mode()
+
+    def update_focus_btn(self, is_focused):
+        """Update focus button appearance based on state."""
+        if is_focused:
+            self.focus_btn.configure(
+                text="↩️ Exit Focus", fg_color=COLORS["accent"]
+            )
+        else:
+            self.focus_btn.configure(
+                text="🖥️ Focus Mode", fg_color=COLORS["bg_card"]
+            )
+
+    # ── Note CRUD ─────────────────────────────────────────────────
 
     def _save_note(self, note_id):
         title = self.title_entry.get().strip()
