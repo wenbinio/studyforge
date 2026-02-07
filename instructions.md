@@ -510,12 +510,10 @@ This document captures a thorough review of all agent contributions to the Study
 
 ## 12. Style & Accessibility Issues
 
-### 12.1 WCAG Color Contrast Failures (HIGH)
+### 12.1 WCAG Color Contrast Concerns (HIGH)
 - **Files:** Both `ui/styles.py` files
-- **Problem:** Several color combinations fail WCAG AA contrast requirements:
-  - `text_muted` (#6c6c8a) on `bg_primary` (#1a1b2e): ~2.8:1 ratio (fails AA 4.5:1)
-  - `accent` (#6c5ce7) on `bg_input` (#1e1f3a): ~3.2:1 ratio (fails AA)
-- **Fix:** Lighten `text_muted` to at least #8f8fb3 and `accent` to at least #7c7dff.
+- **Problem:** Several color combinations may not meet WCAG AA contrast requirements (4.5:1 for normal text). The dark theme colors (`text_muted` #6c6c8a on `bg_primary` #1a1b2e, `accent` #6c5ce7 on `bg_input` #1e1f3a) should be verified with a WCAG contrast checker tool (e.g., WebAIM Contrast Checker) to ensure they meet the 4.5:1 minimum ratio for normal text and 3:1 for large text.
+- **Fix:** Run all foreground/background color pairs through a WCAG contrast checker. Lighten any colors that fail AA compliance. Document the verified contrast ratios in `styles.py`.
 
 ### 12.2 Platform-Specific Font Hardcoding (HIGH)
 - **Files:** Both `ui/styles.py` files
