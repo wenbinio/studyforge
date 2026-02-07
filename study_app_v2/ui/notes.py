@@ -52,6 +52,9 @@ class NotesTab(ctk.CTkFrame):
             corner_radius=8, command=self._toggle_focus_mode)
         self.focus_btn.pack(side="left", padx=4)
 
+        ctk.CTkButton(br, text="➕ New Note", width=120, height=34, font=FONTS["body"],
+            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            command=self._new_note).pack(side="left", padx=4)
         ctk.CTkButton(br, text="📂 Import File", width=120, height=34, font=FONTS["body"],
             fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"], corner_radius=8,
             command=self.import_file).pack(side="left", padx=4)
@@ -85,7 +88,7 @@ class NotesTab(ctk.CTkFrame):
         for w in self.viewer.winfo_children(): w.destroy()
         ctk.CTkLabel(self.viewer, text="📄", font=("Segoe UI", 40),
             text_color=COLORS["text_muted"]).pack(expand=True)
-        ctk.CTkLabel(self.viewer, text="Select a note or import one.",
+        ctk.CTkLabel(self.viewer, text="Select a note, or click ➕ New Note to create one.",
             font=FONTS["body"], text_color=COLORS["text_muted"]).pack(pady=(0,40))
 
     def refresh(self):
@@ -426,6 +429,14 @@ class NotesTab(ctk.CTkFrame):
             self.focus_btn.configure(text="🖥️ Focus Mode", fg_color=COLORS["bg_card"])
 
     # ── Note CRUD ─────────────────────────────────────────────────
+
+    def _new_note(self):
+        """Create a new blank note and open it in the editor."""
+        note_id = db.add_note("Untitled Note", "")
+        if not note_id:
+            return
+        self.refresh()
+        self.view_note(note_id)
 
     def _save(self, nid):
         db.update_note(nid, title=self.title_e.get().strip(),
