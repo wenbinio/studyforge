@@ -174,7 +174,7 @@ class NotepadTab(ctk.CTkFrame):
         self.grid_rowconfigure(4, weight=1)
 
         self.editor_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.editor_frame.grid(row=4, column=0, sticky="nsew")
+        self.editor_frame.grid(row=4, column=0, sticky="nsew", pady=(0, PADDING["page"]))
         self.editor_frame.grid_columnconfigure(0, weight=0)  # navigator (fixed width)
         self.editor_frame.grid_columnconfigure(1, weight=1)  # editor
         self.editor_frame.grid_columnconfigure(2, weight=0)  # preview (shown dynamically)
