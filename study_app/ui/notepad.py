@@ -194,7 +194,7 @@ class NotepadTab(ctk.CTkFrame):
             border_color=COLORS["border"], border_width=1, corner_radius=8,
             wrap="word", undo=True
         )
-        self.editor.grid(row=0, column=1, sticky="nsew")
+        self.editor.grid(row=0, column=0, sticky="nsew")
 
         # Preview panel (hidden by default)
         self.preview_panel = ctk.CTkTextbox(
@@ -203,6 +203,8 @@ class NotepadTab(ctk.CTkFrame):
             border_color=COLORS["accent"], border_width=1, corner_radius=8,
             wrap="word"
         )
+
+        self._update_editor_layout()
 
         # ── Keyboard shortcuts ────────────────────────────────────
         self.editor.bind("<Control-b>", lambda e: (self._wrap_selection("**"), "break"))
@@ -271,34 +273,51 @@ class NotepadTab(ctk.CTkFrame):
         self.editor.focus_set()
 
     # ── Preview ───────────────────────────────────────────────────
+    def _update_editor_layout(self):
+        editor_col = 1 if self.nav_visible else 0
+        preview_col = editor_col + 1
+
+        if self.nav_visible:
+            self.nav_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
+        else:
+            self.nav_panel.grid_forget()
+
+        self.editor.grid(row=0, column=editor_col, sticky="nsew")
+
+        if self.preview_visible:
+            self.preview_panel.grid(row=0, column=preview_col, sticky="nsew", padx=(5, 0))
+        else:
+            self.preview_panel.grid_forget()
+
+        for col in range(3):
+            self.editor_frame.grid_columnconfigure(col, weight=0)
+        self.editor_frame.grid_columnconfigure(editor_col, weight=1)
+        if self.preview_visible:
+            self.editor_frame.grid_columnconfigure(preview_col, weight=1)
 
     def _toggle_preview(self):
         """Toggle markdown preview panel side-by-side with editor."""
         if self.preview_visible:
-            self.preview_panel.grid_forget()
-            self.editor_frame.grid_columnconfigure(2, weight=0)
             self.preview_btn.configure(fg_color=COLORS["bg_card"])
             self.preview_visible = False
         else:
-            self.editor_frame.grid_columnconfigure(2, weight=1)
-            self.preview_panel.grid(row=0, column=2, sticky="nsew", padx=(5, 0))
             self._render_preview()
             self.preview_btn.configure(fg_color=COLORS["accent"])
             self.preview_visible = True
+        self._update_editor_layout()
 
     # ── Markdown Navigator ────────────────────────────────────────
 
     def _toggle_navigator(self):
         """Toggle the heading navigator panel."""
         if self.nav_visible:
-            self.nav_panel.grid_forget()
             self.nav_btn.configure(fg_color=COLORS["bg_card"])
             self.nav_visible = False
         else:
-            self.nav_panel.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
             self._refresh_navigator()
             self.nav_btn.configure(fg_color=COLORS["accent"])
             self.nav_visible = True
+        self._update_editor_layout()
 
     def _refresh_navigator(self):
         """Scan the editor content for headings and populate the navigator."""
