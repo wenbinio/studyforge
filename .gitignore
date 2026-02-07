@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# App data (user-specific)
+data/studyforge.db
+config.json
+
+# Build artifacts
+build/
+dist/
+*.spec
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
