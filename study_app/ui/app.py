@@ -12,7 +12,11 @@ from ui.dashboard import DashboardTab
 from ui.pomodoro import PomodoroTab
 from ui.flashcards import FlashcardsTab
 from ui.notes import NotesTab
+from ui.notepad import NotepadTab
 from ui.quiz import QuizTab
+from ui.hypotheticals import HypotheticalsTab
+from ui.essays import EssaysTab
+from ui.participation import ParticipationTab
 
 
 class StudyForgeApp(ctk.CTk):
@@ -35,6 +39,8 @@ class StudyForgeApp(ctk.CTk):
         self.tabs = {}
         self.nav_buttons = {}
         self.current_tab = None
+        self.focus_mode = False
+        self.sidebar = None
 
         self.build_ui()
         self.select_tab("Dashboard")
@@ -45,9 +51,10 @@ class StudyForgeApp(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
 
         # ── Sidebar ───────────────────────────────────────────────
-        sidebar = ctk.CTkFrame(self, width=200, fg_color=COLORS["bg_secondary"], corner_radius=0)
-        sidebar.grid(row=0, column=0, sticky="ns")
-        sidebar.grid_propagate(False)
+        self.sidebar = ctk.CTkFrame(self, width=200, fg_color=COLORS["bg_secondary"], corner_radius=0)
+        self.sidebar.grid(row=0, column=0, sticky="ns")
+        self.sidebar.grid_propagate(False)
+        sidebar = self.sidebar
 
         # App logo / title
         logo_frame = ctk.CTkFrame(sidebar, fg_color="transparent")
@@ -72,7 +79,11 @@ class StudyForgeApp(ctk.CTk):
             ("🍅", "Pomodoro"),
             ("🧠", "Flashcards"),
             ("📝", "Notes"),
+            ("✏️", "Notepad"),
             ("❓", "Quiz"),
+            ("⚖️", "Hypotheticals"),
+            ("📜", "Essays"),
+            ("🎓", "Participation"),
         ]
 
         for icon, label in nav_items:
@@ -125,7 +136,11 @@ class StudyForgeApp(ctk.CTk):
         self.tabs["Pomodoro"] = PomodoroTab(self.content_area, self)
         self.tabs["Flashcards"] = FlashcardsTab(self.content_area, self)
         self.tabs["Notes"] = NotesTab(self.content_area, self)
+        self.tabs["Notepad"] = NotepadTab(self.content_area, self)
         self.tabs["Quiz"] = QuizTab(self.content_area, self)
+        self.tabs["Hypotheticals"] = HypotheticalsTab(self.content_area, self)
+        self.tabs["Essays"] = EssaysTab(self.content_area, self)
+        self.tabs["Participation"] = ParticipationTab(self.content_area, self)
 
     def _open_folder(self, path):
         """Open a folder in the system file explorer."""
@@ -155,6 +170,8 @@ class StudyForgeApp(ctk.CTk):
                 self.tabs["Dashboard"].refresh()
             elif tab_name == "Quiz":
                 self.tabs["Quiz"].refresh_notes()
+            elif tab_name == "Notepad":
+                self.tabs["Notepad"].refresh()
             elif tab_name == "Flashcards":
                 # If in review or interleaved mode, refresh due cards
                 fc = self.tabs["Flashcards"]
@@ -175,3 +192,15 @@ class StudyForgeApp(ctk.CTk):
                     fg_color="transparent",
                     text_color=COLORS["text_secondary"]
                 )
+
+    def toggle_focus_mode(self):
+        """Toggle sidebar visibility for distraction-free notepad writing."""
+        self.focus_mode = not self.focus_mode
+        if self.focus_mode:
+            self.sidebar.grid_forget()
+        else:
+            self.sidebar.grid(row=0, column=0, sticky="ns")
+
+        notepad = self.tabs.get("Notepad")
+        if notepad:
+            notepad.update_focus_btn(self.focus_mode)

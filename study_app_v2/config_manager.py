@@ -12,6 +12,9 @@ CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.j
 DEFAULTS = {
     "claude_api_key": "",
     "claude_model": "claude-sonnet-4-5-20250929",
+    "claude_model_hypotheticals": "",
+    "claude_model_essays": "",
+    "claude_model_participation": "",
     "pomodoro_work_minutes": 25,
     "pomodoro_short_break": 5,
     "pomodoro_long_break": 15,
