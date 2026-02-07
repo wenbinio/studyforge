@@ -6,6 +6,10 @@ from ui.styles import COLORS, FONTS, PAD
 import database as db
 import config_manager as cfg
 
+MIN_HEIGHT_RATIO = 0.25
+MAX_HEIGHT_RATIO = 0.6
+FALLBACK_MAX_HEIGHT = 400
+
 
 def _bind_mousewheel_lock(scrollable_frame):
     """Bind mouse wheel events on a CTkScrollableFrame so only it scrolls (not the parent)."""
@@ -134,6 +138,21 @@ class HypotheticalsTab(ctk.CTkFrame):
 
         self._show_history()
 
+    def _get_window_height(self):
+        """Return the window height, falling back to screen height before render."""
+        window = self.winfo_toplevel()
+        height = window.winfo_height()
+        if height <= 1:
+            height = window.winfo_screenheight()
+        return height
+
+    def _responsive_height(self, text, min_h=100):
+        """Return a responsive textbox height for content based on window ratios."""
+        win_h = self._get_window_height()
+        min_h = max(min_h, int(win_h * MIN_HEIGHT_RATIO))
+        max_h = max(FALLBACK_MAX_HEIGHT, int(win_h * MAX_HEIGHT_RATIO))
+        return _calc_textbox_height(text, min_h=min_h, max_h=max_h)
+
     def _save_model(self, value):
         model = "" if value == "(use default)" else value
         cfg.update_setting("claude_model_hypotheticals", model)
@@ -254,7 +273,7 @@ class HypotheticalsTab(ctk.CTkFrame):
             command=lambda: self._toggle_layout(hid))
         self.layout_btn.pack(side="right")
 
-        scenario_h = _calc_textbox_height(hyp["scenario"])
+        scenario_h = self._responsive_height(hyp["scenario"])
 
         if self.side_by_side:
             # ── Side-by-side layout ───────────────────────────────
@@ -319,7 +338,7 @@ class HypotheticalsTab(ctk.CTkFrame):
             ctk.CTkLabel(rc, text="📝 Your Analysis", font=FONTS["subheading"],
                 text_color=COLORS["text_primary"]).pack(padx=PAD["section"], pady=(PAD["section"], 4), anchor="w")
 
-            resp_h = _calc_textbox_height(hyp.get("response", ""), min_h=150)
+            resp_h = self._responsive_height(hyp.get("response", ""), min_h=150)
             self.response_tb = ctk.CTkTextbox(rc, fg_color=COLORS["bg_input"],
                 text_color=COLORS["text_primary"], font=FONTS["body"], wrap="word",
                 corner_radius=8, height=resp_h)
@@ -408,7 +427,7 @@ class HypotheticalsTab(ctk.CTkFrame):
         ctk.CTkLabel(fc, text=f"📊 Grade: {grade}", font=FONTS["subheading"],
             text_color=color).pack(padx=PAD["section"], pady=(PAD["section"], 4), anchor="w")
         if hyp.get("feedback"):
-            fb_h = _calc_textbox_height(hyp["feedback"], min_h=120)
+            fb_h = self._responsive_height(hyp["feedback"], min_h=120)
             fb_tb = ctk.CTkTextbox(fc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
                 font=FONTS["body"], wrap="word", corner_radius=8, height=fb_h)
             fb_tb.insert("1.0", hyp["feedback"])
