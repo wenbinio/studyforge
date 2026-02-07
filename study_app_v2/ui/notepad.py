@@ -136,7 +136,7 @@ class NotepadTab(ctk.CTkFrame):
         self.editor_frame.grid(row=4, column=0, sticky="nsew", padx=PAD["page"], pady=(0, PAD["page"]))
         self.editor_frame.grid_columnconfigure(0, weight=0)  # navigator (fixed width)
         self.editor_frame.grid_columnconfigure(1, weight=1)  # editor
-        self.editor_frame.grid_columnconfigure(2, weight=1)  # preview
+        self.editor_frame.grid_columnconfigure(2, weight=0)  # preview (shown dynamically)
         self.editor_frame.grid_rowconfigure(0, weight=1)
 
         # Navigator panel (hidden by default)
@@ -149,11 +149,21 @@ class NotepadTab(ctk.CTkFrame):
         self.editor = ctk.CTkTextbox(self.editor_frame, fg_color=COLORS["bg_input"],
             text_color=COLORS["text_primary"], font=("Consolas", 13),
             border_color=COLORS["border"], border_width=1, corner_radius=8, wrap="word", undo=True)
-        self.editor.grid(row=0, column=1, sticky="nsew", columnspan=2)
+        self.editor.grid(row=0, column=1, sticky="nsew")
 
         self.preview_panel = ctk.CTkTextbox(self.editor_frame, fg_color=COLORS["bg_card"],
             text_color=COLORS["text_primary"], font=FONTS["body"],
             border_color=COLORS["accent"], border_width=1, corner_radius=8, wrap="word")
+
+        # ── Keyboard shortcuts ────────────────────────────────────
+        self.editor.bind("<Control-b>", lambda e: (self._wrap_selection("**"), "break"))
+        self.editor.bind("<Control-i>", lambda e: (self._wrap_selection("*"), "break"))
+        self.editor.bind("<Control-k>", lambda e: (self._wrap_selection("`"), "break"))
+        self.editor.bind("<Control-s>", lambda e: (self._save_note(), "break"))
+        self.editor.bind("<Control-B>", lambda e: (self._wrap_selection("**"), "break"))
+        self.editor.bind("<Control-I>", lambda e: (self._wrap_selection("*"), "break"))
+        self.editor.bind("<Control-K>", lambda e: (self._wrap_selection("`"), "break"))
+        self.editor.bind("<Control-S>", lambda e: (self._save_note(), "break"))
 
         self._refresh_note_selector()
 
@@ -211,11 +221,11 @@ class NotepadTab(ctk.CTkFrame):
     def _toggle_preview(self):
         if self.preview_visible:
             self.preview_panel.grid_forget()
-            self.editor.grid_configure(columnspan=2)
+            self.editor_frame.grid_columnconfigure(2, weight=0)
             self.preview_btn.configure(fg_color=COLORS["bg_card"])
             self.preview_visible = False
         else:
-            self.editor.grid_configure(columnspan=1)
+            self.editor_frame.grid_columnconfigure(2, weight=1)
             self.preview_panel.grid(row=0, column=2, sticky="nsew", padx=(5, 0))
             self._render_preview()
             self.preview_btn.configure(fg_color=COLORS["accent"])

@@ -25,11 +25,66 @@ def _update_config_setting(config_path, key, value):
         pass
 
 
+def _bind_mousewheel_lock(scrollable_frame):
+    """Bind mouse wheel events on a CTkScrollableFrame so only it scrolls (not the parent)."""
+    def _on_enter(event):
+        widget = scrollable_frame
+        # Bind mousewheel to the inner canvas to prevent propagation
+        if hasattr(widget, '_parent_canvas'):
+            canvas = widget._parent_canvas
+        else:
+            canvas = None
+            for child in widget.winfo_children():
+                if isinstance(child, ctk.CTkCanvas) or child.winfo_class() == 'Canvas':
+                    canvas = child
+                    break
+        if canvas:
+            canvas.bind_all("<MouseWheel>", lambda e: _on_mousewheel(e, canvas))
+            canvas.bind_all("<Button-4>", lambda e: _on_mousewheel_linux(e, canvas, -1))
+            canvas.bind_all("<Button-5>", lambda e: _on_mousewheel_linux(e, canvas, 1))
+
+    def _on_leave(event):
+        widget = scrollable_frame
+        if hasattr(widget, '_parent_canvas'):
+            canvas = widget._parent_canvas
+        else:
+            canvas = None
+            for child in widget.winfo_children():
+                if isinstance(child, ctk.CTkCanvas) or child.winfo_class() == 'Canvas':
+                    canvas = child
+                    break
+        if canvas:
+            canvas.unbind_all("<MouseWheel>")
+            canvas.unbind_all("<Button-4>")
+            canvas.unbind_all("<Button-5>")
+
+    def _on_mousewheel(event, canvas):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"
+
+    def _on_mousewheel_linux(event, canvas, direction):
+        canvas.yview_scroll(direction * 3, "units")
+        return "break"
+
+    scrollable_frame.bind("<Enter>", _on_enter)
+    scrollable_frame.bind("<Leave>", _on_leave)
+
+
+def _calc_textbox_height(text, min_h=100, max_h=400, chars_per_line=80, line_h=20):
+    """Calculate a textbox height based on content length."""
+    if not text:
+        return min_h
+    lines = text.count('\n') + 1
+    wrapped = max(lines, len(text) // chars_per_line + 1)
+    return max(min_h, min(max_h, wrapped * line_h + 20))
+
+
 class HypotheticalsTab(ctk.CTkFrame):
     def __init__(self, parent, app_ref):
         super().__init__(parent, fg_color="transparent")
         self.app = app_ref
         self.current_hyp = None
+        self.side_by_side = False
         self.build_ui()
 
     def build_ui(self):
@@ -161,15 +216,36 @@ class HypotheticalsTab(ctk.CTkFrame):
                 font=FONTS["body"], text_color=COLORS["text_muted"]).pack(pady=40)
             return
 
+        # ── Progress tracker ──────────────────────────────────────
+        total = len(hyps)
+        answered = sum(1 for h in hyps if h.get("response"))
+        graded = sum(1 for h in hyps if h.get("grade"))
+        prog_f = ctk.CTkFrame(self.content_f, fg_color=COLORS["bg_card"], corner_radius=10)
+        prog_f.pack(fill="x", pady=(0, 8))
+        prog_inner = ctk.CTkFrame(prog_f, fg_color="transparent")
+        prog_inner.pack(fill="x", padx=PADDING["section"], pady=PADDING["element"])
+        ctk.CTkLabel(prog_inner, text=f"📈 Progress: {answered}/{total} answered  ·  {graded}/{total} graded",
+            font=FONTS["body_bold"], text_color=COLORS["text_primary"]).pack(side="left")
+        # Progress bar
+        pct = (graded / total * 100) if total else 0
+        prog_bar = ctk.CTkProgressBar(prog_inner, width=200, height=14,
+            fg_color=COLORS["bg_input"], progress_color=COLORS["success"], corner_radius=6)
+        prog_bar.set(pct / 100)
+        prog_bar.pack(side="right", padx=(12, 0))
+
         scroll = ctk.CTkScrollableFrame(self.content_f, fg_color="transparent")
         scroll.pack(fill="both", expand=True)
+        _bind_mousewheel_lock(scroll)
+
         for h in hyps:
             item = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=10, cursor="hand2")
             item.pack(fill="x", padx=4, pady=3)
-            title = h["title"][:60] + ("..." if len(h["title"]) > 60 else "")
             grade_txt = f"  ·  Grade: {h['grade']}" if h.get("grade") else ""
-            ctk.CTkLabel(item, text=f"⚖️ {title}{grade_txt}", font=FONTS["body_bold"],
-                text_color=COLORS["text_primary"], anchor="w").pack(padx=12, pady=(8, 0), anchor="w")
+            lbl = ctk.CTkLabel(item, text=f"⚖️ {h['title']}{grade_txt}", font=FONTS["body_bold"],
+                text_color=COLORS["text_primary"], anchor="w", wraplength=0)
+            lbl.pack(padx=12, pady=(8, 0), fill="x", anchor="w")
+            # Dynamically set wraplength on configure
+            lbl.bind("<Configure>", lambda e, l=lbl: l.configure(wraplength=max(e.width - 10, 100)))
             meta = f"{h['created_at'][:10]}  ·  {'Answered' if h.get('response') else 'Unanswered'}"
             ctk.CTkLabel(item, text=meta, font=FONTS["small"],
                 text_color=COLORS["text_muted"], anchor="w").pack(padx=12, pady=(0, 6), anchor="w")
@@ -185,50 +261,116 @@ class HypotheticalsTab(ctk.CTkFrame):
 
         scroll = ctk.CTkScrollableFrame(self.content_f, fg_color="transparent")
         scroll.pack(fill="both", expand=True)
+        _bind_mousewheel_lock(scroll)
 
-        ctk.CTkButton(scroll, text="← Back to List", width=120, height=30, font=FONTS["small"],
+        # ── Top bar: Back + Layout toggle ─────────────────────────
+        top_bar = ctk.CTkFrame(scroll, fg_color="transparent")
+        top_bar.pack(fill="x", pady=(0, 8))
+        ctk.CTkButton(top_bar, text="← Back to List", width=120, height=30, font=FONTS["small"],
             fg_color=COLORS["bg_secondary"], corner_radius=6,
-            command=self._show_history).pack(anchor="w", pady=(0, 8))
+            command=self._show_history).pack(side="left")
+        self.layout_btn = ctk.CTkButton(top_bar, text="◫ Side-by-Side" if not self.side_by_side else "▤ Stacked",
+            width=130, height=30, font=FONTS["small"],
+            fg_color=COLORS["accent"] if self.side_by_side else COLORS["bg_secondary"],
+            hover_color=COLORS["accent_hover"], corner_radius=6,
+            command=lambda: self._toggle_layout(hid))
+        self.layout_btn.pack(side="right")
 
-        sc = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
-        sc.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(sc, text=f"⚖️ {hyp['title']}", font=FONTS["subheading"],
-            text_color=COLORS["accent_light"]).pack(padx=PADDING["section"], pady=(PADDING["section"], 4), anchor="w")
-        scenario_tb = ctk.CTkTextbox(sc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
-            font=FONTS["body"], wrap="word", corner_radius=8, height=150)
-        scenario_tb.insert("1.0", hyp["scenario"])
-        scenario_tb.configure(state="disabled")
-        scenario_tb.pack(fill="x", padx=PADDING["section"], pady=(0, PADDING["section"]))
+        scenario_h = _calc_textbox_height(hyp["scenario"])
 
-        rc = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
-        rc.pack(fill="x", pady=(0, 8))
-        ctk.CTkLabel(rc, text="📝 Your Analysis", font=FONTS["subheading"],
-            text_color=COLORS["text_primary"]).pack(padx=PADDING["section"], pady=(PADDING["section"], 4), anchor="w")
+        if self.side_by_side:
+            # ── Side-by-side layout ───────────────────────────────
+            sbs_f = ctk.CTkFrame(scroll, fg_color="transparent")
+            sbs_f.pack(fill="both", expand=True, pady=(0, 8))
+            sbs_f.grid_columnconfigure(0, weight=1)
+            sbs_f.grid_columnconfigure(1, weight=1)
+            sbs_f.grid_rowconfigure(0, weight=1)
 
-        self.response_tb = ctk.CTkTextbox(rc, fg_color=COLORS["bg_input"],
-            text_color=COLORS["text_primary"], font=FONTS["body"], wrap="word",
-            corner_radius=8, height=200)
-        if hyp.get("response"):
-            self.response_tb.insert("1.0", hyp["response"])
-        self.response_tb.pack(fill="x", padx=PADDING["section"], pady=(0, 8))
+            # Left: Scenario
+            sc = ctk.CTkFrame(sbs_f, fg_color=COLORS["bg_card"], corner_radius=12)
+            sc.grid(row=0, column=0, sticky="nsew", padx=(0, 4))
+            ctk.CTkLabel(sc, text=f"⚖️ {hyp['title']}", font=FONTS["subheading"],
+                text_color=COLORS["accent_light"], wraplength=0).pack(
+                padx=PADDING["section"], pady=(PADDING["section"], 4), fill="x", anchor="w")
+            scenario_tb = ctk.CTkTextbox(sc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
+                font=FONTS["body"], wrap="word", corner_radius=8)
+            scenario_tb.insert("1.0", hyp["scenario"])
+            scenario_tb.configure(state="disabled")
+            scenario_tb.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, PADDING["section"]))
 
-        btn_f = ctk.CTkFrame(rc, fg_color="transparent")
-        btn_f.pack(padx=PADDING["section"], pady=(0, PADDING["section"]))
-        ctk.CTkButton(btn_f, text="💾 Save Response", width=140, height=36, font=FONTS["body_bold"],
-            fg_color=COLORS["success"], corner_radius=8,
-            command=lambda: self._save_response(hid)).pack(side="left", padx=4)
-        self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade My Analysis", width=170, height=36,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
-            corner_radius=8, command=lambda: self._grade(hid))
-        self.grade_btn.pack(side="left", padx=4)
-        ctk.CTkButton(btn_f, text="🗑️ Delete", width=80, height=36, font=FONTS["body"],
-            fg_color=COLORS["danger"], corner_radius=8,
-            command=lambda: self._delete(hid)).pack(side="left", padx=4)
+            # Right: Response
+            rc = ctk.CTkFrame(sbs_f, fg_color=COLORS["bg_card"], corner_radius=12)
+            rc.grid(row=0, column=1, sticky="nsew", padx=(4, 0))
+            ctk.CTkLabel(rc, text="📝 Your Analysis", font=FONTS["subheading"],
+                text_color=COLORS["text_primary"]).pack(
+                padx=PADDING["section"], pady=(PADDING["section"], 4), anchor="w")
+
+            self.response_tb = ctk.CTkTextbox(rc, fg_color=COLORS["bg_input"],
+                text_color=COLORS["text_primary"], font=FONTS["body"], wrap="word", corner_radius=8)
+            if hyp.get("response"):
+                self.response_tb.insert("1.0", hyp["response"])
+            self.response_tb.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, 8))
+
+            btn_f = ctk.CTkFrame(rc, fg_color="transparent")
+            btn_f.pack(padx=PADDING["section"], pady=(0, PADDING["section"]))
+            ctk.CTkButton(btn_f, text="💾 Save", width=100, height=36, font=FONTS["body_bold"],
+                fg_color=COLORS["success"], corner_radius=8,
+                command=lambda: self._save_response(hid)).pack(side="left", padx=4)
+            self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade", width=100, height=36,
+                font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                corner_radius=8, command=lambda: self._grade(hid))
+            self.grade_btn.pack(side="left", padx=4)
+            ctk.CTkButton(btn_f, text="🗑️", width=50, height=36, font=FONTS["body"],
+                fg_color=COLORS["danger"], corner_radius=8,
+                command=lambda: self._delete(hid)).pack(side="left", padx=4)
+        else:
+            # ── Stacked layout (original) ─────────────────────────
+            sc = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
+            sc.pack(fill="x", pady=(0, 8))
+            ctk.CTkLabel(sc, text=f"⚖️ {hyp['title']}", font=FONTS["subheading"],
+                text_color=COLORS["accent_light"], wraplength=0).pack(
+                padx=PADDING["section"], pady=(PADDING["section"], 4), fill="x", anchor="w")
+            scenario_tb = ctk.CTkTextbox(sc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
+                font=FONTS["body"], wrap="word", corner_radius=8, height=scenario_h)
+            scenario_tb.insert("1.0", hyp["scenario"])
+            scenario_tb.configure(state="disabled")
+            scenario_tb.pack(fill="x", padx=PADDING["section"], pady=(0, PADDING["section"]))
+
+            rc = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
+            rc.pack(fill="x", pady=(0, 8))
+            ctk.CTkLabel(rc, text="📝 Your Analysis", font=FONTS["subheading"],
+                text_color=COLORS["text_primary"]).pack(padx=PADDING["section"], pady=(PADDING["section"], 4), anchor="w")
+
+            resp_h = _calc_textbox_height(hyp.get("response", ""), min_h=150)
+            self.response_tb = ctk.CTkTextbox(rc, fg_color=COLORS["bg_input"],
+                text_color=COLORS["text_primary"], font=FONTS["body"], wrap="word",
+                corner_radius=8, height=resp_h)
+            if hyp.get("response"):
+                self.response_tb.insert("1.0", hyp["response"])
+            self.response_tb.pack(fill="x", padx=PADDING["section"], pady=(0, 8))
+
+            btn_f = ctk.CTkFrame(rc, fg_color="transparent")
+            btn_f.pack(padx=PADDING["section"], pady=(0, PADDING["section"]))
+            ctk.CTkButton(btn_f, text="💾 Save Response", width=140, height=36, font=FONTS["body_bold"],
+                fg_color=COLORS["success"], corner_radius=8,
+                command=lambda: self._save_response(hid)).pack(side="left", padx=4)
+            self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade My Analysis", width=170, height=36,
+                font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                corner_radius=8, command=lambda: self._grade(hid))
+            self.grade_btn.pack(side="left", padx=4)
+            ctk.CTkButton(btn_f, text="🗑️ Delete", width=80, height=36, font=FONTS["body"],
+                fg_color=COLORS["danger"], corner_radius=8,
+                command=lambda: self._delete(hid)).pack(side="left", padx=4)
 
         self.feedback_f = ctk.CTkFrame(scroll, fg_color="transparent")
         self.feedback_f.pack(fill="x", pady=(0, 8))
         if hyp.get("grade"):
             self._display_feedback(hyp)
+
+    def _toggle_layout(self, hid):
+        """Toggle between stacked and side-by-side layout."""
+        self.side_by_side = not self.side_by_side
+        self._show_hypothetical(hid)
 
     def _save_response(self, hid):
         response = self.response_tb.get("1.0", "end").strip()
@@ -288,8 +430,9 @@ class HypotheticalsTab(ctk.CTkFrame):
         ctk.CTkLabel(fc, text=f"📊 Grade: {grade}", font=FONTS["subheading"],
             text_color=color).pack(padx=PADDING["section"], pady=(PADDING["section"], 4), anchor="w")
         if hyp.get("feedback"):
+            fb_h = _calc_textbox_height(hyp["feedback"], min_h=120)
             fb_tb = ctk.CTkTextbox(fc, fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
-                font=FONTS["body"], wrap="word", corner_radius=8, height=200)
+                font=FONTS["body"], wrap="word", corner_radius=8, height=fb_h)
             fb_tb.insert("1.0", hyp["feedback"])
             fb_tb.configure(state="disabled")
             fb_tb.pack(fill="x", padx=PADDING["section"], pady=(0, PADDING["section"]))
