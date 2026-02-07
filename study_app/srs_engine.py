@@ -50,7 +50,7 @@ def review_card(card: dict, rating: int) -> dict:
         else:
             interval = round(interval * ef)
         reps += 1
-        next_review = (date.today() + timedelta(days=interval)).isoformat()
+        next_review = (date.today() + timedelta(days=max(interval, 1))).isoformat()
 
     # Persist to database
     update_flashcard_srs(card["id"], ef, interval, reps, next_review)
