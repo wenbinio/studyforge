@@ -22,11 +22,10 @@ def extract_text_from_file(filepath: str) -> str:
     elif ext == ".pdf":
         try:
             import fitz  # PyMuPDF
-            doc = fitz.open(filepath)
-            text = ""
-            for page in doc:
-                text += page.get_text() + "\n"
-            doc.close()
+            with fitz.open(filepath) as doc:
+                text = ""
+                for page in doc:
+                    text += page.get_text() + "\n"
             return text.strip()
         except ImportError:
             return "[Error: PyMuPDF not installed. Run: pip install PyMuPDF]"
