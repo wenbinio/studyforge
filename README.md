@@ -1,8 +1,8 @@
-# 🎓 StudyForge — All-in-One Study Companion
+#  StudyForge — All-in-One Study Companion
 
 A comprehensive desktop study application combining **Pomodoro Timer**, **Active Recall**, **Spaced Repetition (SM-2)**, **Lecture Notes Management**, and **Claude AI Integration** into a single, polished Windows-native tool.
 
-## 📦 Repository Contents
+##  Repository Contents
 
 This repository contains two versions of the StudyForge application:
 
@@ -20,7 +20,7 @@ A simplified version with one-click launcher:
 - In-app configuration
 - See [study_app_v2/README.md](study_app_v2/README.md) for quick start guide
 
-## ✨ Key Features
+## Key Features
 
 - **Pomodoro Timer** — Configurable work/break intervals with session tracking
 - **Flashcards + SRS** — Anki-style spaced repetition using SM-2 algorithm
@@ -29,7 +29,7 @@ A simplified version with one-click launcher:
 - **Claude AI Integration** — Auto-generate flashcards, quizzes, and explanations
 - **Dashboard** — Daily stats, streak tracking, review forecasts
 
-## 🚀 Quick Start
+## Quick Start
 
 Choose your preferred version:
 
@@ -44,8 +44,7 @@ StudyForge.bat
 cd study_app
 python main.py
 ```
-
-## 📋 Requirements
+## Requirements
 
 - Windows 10/11
 - Python 3.10+
