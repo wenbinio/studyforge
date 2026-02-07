@@ -33,6 +33,10 @@ The welcome wizard lets you paste your Claude API key (optional — you can skip
 | **Flashcards** | SM-2 spaced repetition review, manual creation, AI bulk generation |
 | **Notes Manager** | Import `.txt` `.md` `.pdf` `.docx`; tag, search, edit |
 | **Active Recall Quiz** | AI-generated MCQs with difficulty, explanations, scoring |
+| **Notepad** | Rich text editor with markdown formatting, preview, and focus mode |
+| **Essays** | Essay writing with rubric upload and AI grading |
+| **Hypotheticals** | AI-generated legal hypothetical scenarios from your notes |
+| **Class Participation** | AI-generated discussion questions for class preparation |
 | **Settings** | In-app API key entry, connection testing, all preferences |
 
 ---
@@ -69,6 +73,10 @@ StudyForge/
 │   ├── flashcards.py       ← Flashcard review + creation
 │   ├── notes.py            ← Notes manager tab
 │   ├── quiz.py             ← Active recall quiz tab
+│   ├── notepad.py          ← Rich text editor with focus mode
+│   ├── essays.py           ← Essay writing with AI grading
+│   ├── hypotheticals.py    ← Legal hypothetical scenarios
+│   ├── participation.py    ← Class participation questions
 │   ├── settings.py         ← In-app settings + API key
 │   └── styles.py           ← Theme constants
 └── data/

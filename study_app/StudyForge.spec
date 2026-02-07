@@ -50,6 +50,9 @@ hiddenimports = [
     "ui.hypotheticals",
     "ui.essays",
     "ui.notepad",
+    "ui.notepad",
+    "ui.essays",
+    "ui.hypotheticals",
     "ui.participation",
 
     # customtkinter
