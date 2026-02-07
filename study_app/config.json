@@ -1,0 +1,10 @@
+{
+    "claude_api_key": "YOUR_API_KEY_HERE",
+    "claude_model": "claude-sonnet-4-5-20250929",
+    "pomodoro_work_minutes": 25,
+    "pomodoro_short_break": 5,
+    "pomodoro_long_break": 15,
+    "pomodoro_sessions_before_long_break": 4,
+    "daily_new_cards_limit": 20,
+    "theme": "dark"
+}
