@@ -1,13 +1,22 @@
 """
 main.py — Entry point for StudyForge.
-Double-click StudyForge.bat to launch, or run: python main.py
+
+Works both as:
+  python main.py       (development / bat launcher)
+  StudyForge.exe       (frozen PyInstaller build)
 """
 
 import os
 import sys
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, PROJECT_DIR)
+# ── Path setup ────────────────────────────────────────────────────
+# Must happen before any local imports so modules resolve correctly.
+if getattr(sys, 'frozen', False):
+    # Running as PyInstaller bundle — add the temp extract dir to path
+    sys.path.insert(0, sys._MEIPASS)
+else:
+    PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, PROJECT_DIR)
 
 from database import init_db
 from config_manager import load_config, is_first_run, get_api_key

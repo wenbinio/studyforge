@@ -21,36 +21,51 @@ A comprehensive desktop study application combining **Pomodoro Timer**, **Active
 
 ---
 
-## 🛠️ Setup Instructions (Step by Step)
+## 🚀 Getting Started
 
-### Prerequisites
+### Option A: Download Pre-Built App (No Python Required)
+1. Go to the [Releases](../../releases) page
+2. Download **StudyForge.exe**
+3. Double-click to run — no installation needed
+4. On first run it creates `%APPDATA%\StudyForge\config.json` — click **📁 Open Config** in the sidebar to find it
+5. Edit `config.json` to add your Claude API key, then restart
+
+> The `.exe` is fully self-contained. You can move it anywhere on your PC.
+
+### Option B: Run from Source
+
+#### Prerequisites
 - **Windows 10/11**
 - **Python 3.10+** — Download from [python.org](https://www.python.org/downloads/)
   - ✅ During install, CHECK **"Add Python to PATH"**
 
-### Step 1: Download the Project
-Place the entire `study_app` folder anywhere on your PC (e.g., `C:\Users\YourName\study_app`).
-
-### Step 2: Open Terminal
-Press `Win + R`, type `cmd`, press Enter. Then navigate to the project:
+#### Steps
 ```
-cd C:\Users\YourName\study_app
-```
-
-### Step 3: Create a Virtual Environment (recommended)
-```
+cd study_app
 python -m venv venv
 venv\Scripts\activate
-```
-
-### Step 4: Install Dependencies
-```
 pip install -r requirements.txt
+python main.py
 ```
 
-### Step 5: Configure Your Claude API Key
+### Option C: Build the .exe Yourself
+Double-click the build script (requires Python):
+```
+build.bat
+```
+This installs PyInstaller, bundles everything, and produces a single `dist\StudyForge.exe`.
+
+Or run manually:
+```
+pip install pyinstaller
+pyinstaller StudyForge.spec --noconfirm
+```
+
+---
+
+## 🛠️ Configure Your Claude API Key
 1. Go to [console.anthropic.com](https://console.anthropic.com/) and create an API key.
-2. Open the file `config.json` in the project root.
+2. Open the file `config.json` (or `%APPDATA%\StudyForge\config.json` if using the `.exe`).
 3. Paste your key:
 ```json
 {
@@ -64,31 +79,6 @@ pip install -r requirements.txt
     "theme": "dark"
 }
 ```
-
-### Step 6: Run the App
-```
-python main.py
-```
-
-### (Option A) Step 7: Build a Standalone .exe
-The easiest way — just double-click the build script:
-```
-build.bat
-```
-This installs PyInstaller, bundles everything, and produces a single `dist\StudyForge.exe`.
-
-Or run it manually:
-```
-pip install pyinstaller
-pyinstaller StudyForge.spec --noconfirm
-```
-
-#### After building:
-1. **Double-click** `dist\StudyForge.exe` — it launches with no console window.
-2. On first run it creates `%APPDATA%\StudyForge\config.json` — click **📁 Open Config** in the sidebar to find it.
-3. Edit `config.json` to add your Claude API key, then restart.
-4. Your database and study data persist at `%APPDATA%\StudyForge\data\`.
-5. You can move `StudyForge.exe` anywhere — it's fully self-contained.
 
 ---
 

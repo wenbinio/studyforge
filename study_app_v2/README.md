@@ -4,23 +4,33 @@ Pomodoro Timer · Spaced Repetition (SM-2) · Active Recall · AI-Powered Study
 
 ---
 
-## 🚀 Setup — One Step
+## 🚀 Getting Started
 
-### Prerequisites
-- **Windows 10/11**
-- **Python 3.10+** — [python.org/downloads](https://www.python.org/downloads/)
-  - ✅ CHECK **"Add Python to PATH"** during install
+### Option A: Download Pre-Built App (No Python Required)
+1. Go to the [Releases](../../releases) page
+2. Download **StudyForge_v2.exe**
+3. Double-click to run — the setup wizard will guide you
 
-### Launch
+> The `.exe` is fully self-contained. No Python or other software needed.
+
+### Option B: One-Click Launcher
 **Double-click `StudyForge.bat`** — that's it.
 
 On first run it will:
 1. Detect your Python installation
-2. Create a virtual environment
-3. Install all dependencies
-4. Launch the app with a welcome wizard
+2. **If Python isn't found**, offer to download a portable copy automatically (no install required)
+3. Create a virtual environment
+4. Install all dependencies
+5. Launch the app with a welcome wizard
 
 The welcome wizard lets you paste your Claude API key (optional — you can skip and add it later in **Settings**).
+
+### Option C: Build the .exe Yourself
+Double-click the build script (requires Python):
+```
+build.bat
+```
+This installs PyInstaller, bundles everything, and produces a single `dist\StudyForge.exe`.
 
 ---
 
@@ -57,7 +67,9 @@ Set up your key in **Settings → Claude AI Integration** inside the app.
 ## 📂 Project Structure
 ```
 StudyForge/
-├── StudyForge.bat          ← Double-click to launch
+├── StudyForge.bat          ← Double-click to launch (auto-downloads Python if needed)
+├── build.bat               ← Build standalone .exe (requires Python)
+├── StudyForge.spec         ← PyInstaller build specification
 ├── main.py                 ← Python entry point
 ├── config_manager.py       ← Auto-managed config (never edit manually)
 ├── database.py             ← SQLite database
