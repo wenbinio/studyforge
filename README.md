@@ -2,6 +2,12 @@
 
 A comprehensive desktop study application combining **Pomodoro Timer**, **Active Recall**, **Spaced Repetition (SM-2)**, **Lecture Notes Management**, and **Claude AI Integration** into a single, polished Windows-native tool.
 
+## Download — No Python Required
+
+Go to the [**Releases**](../../releases) page and download the latest **StudyForge.exe**. Double-click to run — no installation or setup needed.
+
+> Two builds are available: **StudyForge.exe** (full-featured) and **StudyForge_v2.exe** (streamlined with setup wizard). Both are standalone and require no Python.
+
 ##  Repository Contents
 
 This repository contains two versions of the StudyForge application:
@@ -15,7 +21,7 @@ The complete production-ready version with PyInstaller build support:
 
 ### `study_app_v2/` — Streamlined Version  
 A simplified version with one-click launcher:
-- `StudyForge.bat` for instant setup
+- `StudyForge.bat` for instant setup (auto-downloads Python if needed)
 - Setup wizard on first run
 - In-app configuration
 - See [study_app_v2/README.md](study_app_v2/README.md) for quick start guide
@@ -34,23 +40,38 @@ A simplified version with one-click launcher:
 
 ## Quick Start
 
-Choose your preferred version:
+### Option 1: Download Pre-Built App (Recommended)
+1. Go to [Releases](../../releases)
+2. Download `StudyForge.exe` or `StudyForge_v2.exe`
+3. Double-click to run — that's it!
 
-**Option 1: Streamlined Setup (Recommended for beginners)**
+### Option 2: Run from Source (with auto Python setup)
 ```bash
 cd study_app_v2
 StudyForge.bat
 ```
+> If Python isn't installed, the launcher will offer to download a portable copy automatically.
 
-**Option 2: Full Setup (Recommended for building .exe)**
+### Option 3: Run from Source (manual)
 ```bash
 cd study_app
+pip install -r requirements.txt
 python main.py
 ```
+
+## Building the .exe Yourself
+
+Both versions include build scripts that produce standalone `.exe` files via PyInstaller:
+
+```bash
+cd study_app    # or study_app_v2
+build.bat
+```
+
+The GitHub Actions workflow also builds `.exe` files automatically on each tagged release.
+
 ## Requirements
 
-- Windows 10/11
-- Python 3.10+
+- **End users:** Windows 10/11 — no Python needed
+- **Developers:** Python 3.10+ (for running from source or building)
 - Claude API key (optional, for AI features)
-
-For detailed setup instructions, refer to the README in each application folder.

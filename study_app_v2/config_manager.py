@@ -6,8 +6,24 @@ Users never need to touch config.json directly.
 
 import json
 import os
+import sys
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+
+def _get_config_dir() -> str:
+    """
+    Get the directory for config.json.
+    - Frozen (.exe): %APPDATA%/StudyForge  (persists across updates)
+    - Dev:           project directory      (next to source files)
+    """
+    if getattr(sys, 'frozen', False):
+        appdata = os.environ.get("APPDATA", os.path.expanduser("~"))
+        config_dir = os.path.join(appdata, "StudyForge")
+        os.makedirs(config_dir, exist_ok=True)
+        return config_dir
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+CONFIG_PATH = os.path.join(_get_config_dir(), "config.json")
 
 DEFAULTS = {
     "claude_api_key": "",

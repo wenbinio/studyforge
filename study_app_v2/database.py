@@ -5,10 +5,24 @@ All connections use context managers to prevent leaks.
 
 import sqlite3
 import os
+import sys
 from datetime import datetime, date
 from contextlib import contextmanager
 
-DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+def _get_data_dir() -> str:
+    """
+    Get the directory for the SQLite database.
+    - Frozen (.exe): %APPDATA%/StudyForge/data
+    - Dev:           <project>/data
+    """
+    if getattr(sys, 'frozen', False):
+        appdata = os.environ.get("APPDATA", os.path.expanduser("~"))
+        return os.path.join(appdata, "StudyForge", "data")
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+
+DB_DIR = _get_data_dir()
 DB_PATH = os.path.join(DB_DIR, "studyforge.db")
 
 # Whitelist of valid stat fields to prevent SQL injection
