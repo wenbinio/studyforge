@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       version:
@@ -68,6 +70,39 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          files: |
+            artifacts/StudyForge/StudyForge.exe
+            artifacts/StudyForge_v2/StudyForge_v2.exe
+
+  latest-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename v2 artifact
+        run: |
+          mv artifacts/StudyForge_v2/StudyForge.exe artifacts/StudyForge_v2/StudyForge_v2.exe
+
+      - name: Update latest pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest Build
+          body: |
+            Automatically updated pre-release from the latest `main` branch.
+
+            **Downloads:**
+            - **StudyForge.exe** — Full-featured version
+            - **StudyForge_v2.exe** — Streamlined version with setup wizard
+
+            > For stable versioned releases, see the [tagged releases](../../releases).
+          prerelease: true
+          make_latest: false
           files: |
             artifacts/StudyForge/StudyForge.exe
             artifacts/StudyForge_v2/StudyForge_v2.exe
