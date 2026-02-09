@@ -14,16 +14,18 @@ This repository contains two versions of the StudyForge application:
 
 ### `study_app/` — Full-Featured Version
 The complete production-ready version with PyInstaller build support:
-- Build standalone Windows .exe files
-- Comprehensive feature set
+- Download pre-built `.exe` from [Releases](../../releases) — no Python needed
+- Build standalone Windows `.exe` with `build.bat` via PyInstaller
+- Comprehensive feature set including interleaved practice
 - Detailed documentation
 - See [study_app/README.md](study_app/README.md) for complete setup instructions
 
 ### `study_app_v2/` — Streamlined Version  
-A simplified version with one-click launcher:
-- `StudyForge.bat` for instant setup (auto-downloads Python if needed)
-- Setup wizard on first run
-- In-app configuration
+A simplified version with first-run setup wizard:
+- Download pre-built `.exe` from [Releases](../../releases) — no Python needed
+- `StudyForge.bat` for running from source (auto-downloads Python if needed)
+- Build your own `.exe` with `build.bat` via PyInstaller
+- In-app configuration via setup wizard and Settings tab
 - See [study_app_v2/README.md](study_app_v2/README.md) for quick start guide
 
 ## Key Features
