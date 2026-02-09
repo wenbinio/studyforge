@@ -23,7 +23,7 @@ def _get_config_dir() -> str:
     return os.path.dirname(os.path.abspath(__file__))
 
 
-CONFIG_PATH = _get_config_dir() + os.sep + "config.json"
+CONFIG_PATH = os.path.join(_get_config_dir(), "config.json")
 
 DEFAULTS = {
     "claude_api_key": "",

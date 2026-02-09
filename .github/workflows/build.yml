@@ -62,7 +62,6 @@ jobs:
 
       - name: Rename artifacts for release
         run: |
-          mv artifacts/StudyForge/StudyForge.exe artifacts/StudyForge/StudyForge.exe
           mv artifacts/StudyForge_v2/StudyForge.exe artifacts/StudyForge_v2/StudyForge_v2.exe
 
       - name: Create GitHub Release
