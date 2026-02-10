@@ -7,6 +7,8 @@ A comprehensive desktop study application combining **Pomodoro Timer**, **Active
 Go to the [**Releases**](../../releases) page and download the latest **StudyForge.exe**. Double-click to run — no installation or setup needed.
 
 > Two builds are available: **StudyForge.exe** (full-featured) and **StudyForge_v2.exe** (streamlined with setup wizard). Both are standalone and require no Python.
+>
+> A **Latest Build** pre-release is automatically published from the `main` branch whenever changes are pushed. Tagged releases (e.g. `v1.0.0`) are created for stable milestones.
 
 ##  Repository Contents
 
