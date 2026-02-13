@@ -1,7 +1,8 @@
 """
 notes.py — Notes Manager tab for StudyForge.
 Import .txt, .md, .pdf, .docx files; view, tag, search, and manage notes.
-Includes rich markdown editing, preview, navigator, and focus mode.
+Includes rich markdown editing, preview, navigator, focus mode,
+document export, find & replace, table insertion, and document stats.
 """
 
 import customtkinter as ctk
@@ -97,6 +98,14 @@ class NotesTab(ctk.CTkFrame):
             command=self.show_paste_dialog
         ).pack(side="left", padx=4)
 
+        self.export_btn = ctk.CTkButton(
+            btn_row, text="📤 Export", width=100, height=34,
+            font=FONTS["body"], fg_color=COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=8,
+            command=self._export_note, state="disabled"
+        )
+        self.export_btn.pack(side="left", padx=4)
+
         # Search bar
         search_frame = ctk.CTkFrame(self, fg_color="transparent")
         search_frame.pack(fill="x", padx=PADDING["page"], pady=(5, 8))
@@ -136,6 +145,11 @@ class NotesTab(ctk.CTkFrame):
     def _show_empty_viewer(self):
         for w in self.viewer_frame.winfo_children():
             w.destroy()
+
+        try:
+            self.export_btn.configure(state="disabled")
+        except Exception:
+            pass
 
         ctk.CTkLabel(
             self.viewer_frame, text="📄",
@@ -190,6 +204,7 @@ class NotesTab(ctk.CTkFrame):
     def view_note(self, note_id):
         self.selected_note_id = note_id
         self._ai_request_id += 1  # Invalidate any in-flight AI requests
+        self.export_btn.configure(state="normal")
         self.refresh_list()
 
         note = db.get_note(note_id)
@@ -243,6 +258,14 @@ class NotesTab(ctk.CTkFrame):
         )
         self.nav_btn.pack(side="left", padx=2)
 
+        # Find & Replace button
+        ctk.CTkButton(
+            title_bar, text="🔎", width=36, height=32,
+            font=FONTS["small"], fg_color=COLORS["bg_card"],
+            hover_color=COLORS["accent_hover"], corner_radius=6,
+            command=self._show_find_replace
+        ).pack(side="left", padx=2)
+
         # Tags
         tags_frame = ctk.CTkFrame(self.viewer_frame, fg_color="transparent")
         tags_frame.pack(fill="x", padx=PADDING["section"], pady=(0, 5))
@@ -256,6 +279,22 @@ class NotesTab(ctk.CTkFrame):
         )
         self.tags_entry.insert(0, note.get("tags", ""))
         self.tags_entry.pack(side="left", fill="x", expand=True, padx=6)
+
+        # Font size selector
+        ctk.CTkLabel(tags_frame, text="Font:", font=FONTS["small"],
+                      text_color=COLORS["text_muted"]).pack(side="left", padx=(12, 2))
+        self._font_size_var = ctk.StringVar(value="13")
+        font_menu = ctk.CTkOptionMenu(
+            tags_frame, variable=self._font_size_var,
+            values=["10", "11", "12", "13", "14", "16", "18", "20"],
+            width=60, height=28, font=FONTS["small"],
+            fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
+            button_hover_color=COLORS["accent_hover"],
+            dropdown_fg_color=COLORS["bg_card"],
+            dropdown_hover_color=COLORS["accent_hover"],
+            command=self._change_font_size
+        )
+        font_menu.pack(side="left", padx=2)
 
         # Action buttons
         action_row = ctk.CTkFrame(self.viewer_frame, fg_color="transparent")
@@ -287,6 +326,7 @@ class NotesTab(ctk.CTkFrame):
             ("H1", lambda: self._insert_prefix("# ")),
             ("H2", lambda: self._insert_prefix("## ")),
             ("H3", lambda: self._insert_prefix("### ")),
+            ("H4", lambda: self._insert_prefix("#### ")),
             ("|", None),
             ("B", lambda: self._wrap_selection("**")),
             ("I", lambda: self._wrap_selection("*")),
@@ -300,6 +340,10 @@ class NotesTab(ctk.CTkFrame):
             ("```", self._insert_code_block),
             ("> Quote", lambda: self._insert_prefix("> ")),
             ("---", lambda: self._insert_line("\n---\n")),
+            ("|", None),
+            ("🔗", self._insert_link),
+            ("🖼️", self._insert_image),
+            ("📊", self._insert_table),
         ]
 
         for text, cmd in fmt_buttons:
@@ -308,7 +352,7 @@ class NotesTab(ctk.CTkFrame):
                     side="left", padx=4, pady=7
                 )
             else:
-                if text in ("H1", "H2", "H3") or text == "B":
+                if text in ("H1", "H2", "H3", "H4") or text == "B":
                     btn_font = ("Segoe UI", 11, "bold")
                 elif text == "I":
                     btn_font = ("Segoe UI", 11, "italic")
@@ -324,7 +368,7 @@ class NotesTab(ctk.CTkFrame):
 
         # Editor area with optional navigator and preview panels
         editor_area = ctk.CTkFrame(self.viewer_frame, fg_color="transparent")
-        editor_area.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, PADDING["section"]))
+        editor_area.pack(fill="both", expand=True, padx=PADDING["section"], pady=(0, 0))
         editor_area.grid_rowconfigure(0, weight=1)
         self._editor_area = editor_area
 
@@ -354,15 +398,29 @@ class NotesTab(ctk.CTkFrame):
 
         self._update_editor_layout()
 
+        # Document stats bar
+        self.stats_bar = ctk.CTkFrame(self.viewer_frame, fg_color=COLORS["bg_secondary"],
+                                       corner_radius=8, height=28)
+        self.stats_bar.pack(fill="x", padx=PADDING["section"], pady=(4, PADDING["section"]))
+        self.stats_label = ctk.CTkLabel(
+            self.stats_bar, text="", font=FONTS["small"],
+            text_color=COLORS["text_muted"]
+        )
+        self.stats_label.pack(side="left", padx=10, pady=4)
+        self._update_stats()
+
         # Keyboard shortcuts
         self.content_editor.bind("<Control-b>", lambda e: (self._wrap_selection("**"), "break"))
         self.content_editor.bind("<Control-i>", lambda e: (self._wrap_selection("*"), "break"))
         self.content_editor.bind("<Control-k>", lambda e: (self._wrap_selection("`"), "break"))
         self.content_editor.bind("<Control-s>", lambda e: (self._save_note(note_id), "break"))
+        self.content_editor.bind("<Control-h>", lambda e: (self._show_find_replace(), "break"))
         self.content_editor.bind("<Control-B>", lambda e: (self._wrap_selection("**"), "break"))
         self.content_editor.bind("<Control-I>", lambda e: (self._wrap_selection("*"), "break"))
         self.content_editor.bind("<Control-K>", lambda e: (self._wrap_selection("`"), "break"))
         self.content_editor.bind("<Control-S>", lambda e: (self._save_note(note_id), "break"))
+        self.content_editor.bind("<Control-H>", lambda e: (self._show_find_replace(), "break"))
+        self.content_editor.bind("<KeyRelease>", lambda e: self._update_stats())
 
         # AI output area
         self.ai_output_label = ctk.CTkLabel(
@@ -451,7 +509,344 @@ class NotesTab(ctk.CTkFrame):
         self.content_editor.insert(cursor, text)
         self.content_editor.focus_set()
 
-    # ── Preview ───────────────────────────────────────────────────
+    def _insert_link(self):
+        """Insert a markdown hyperlink at the cursor."""
+        try:
+            sel_start = self.content_editor.index("sel.first")
+            sel_end = self.content_editor.index("sel.last")
+            selected = self.content_editor.get(sel_start, sel_end)
+            self.content_editor.delete(sel_start, sel_end)
+            self.content_editor.insert(sel_start, f"[{selected}](url)")
+        except Exception:
+            cursor = self.content_editor.index("insert")
+            self.content_editor.insert(cursor, "[link text](url)")
+        self.content_editor.focus_set()
+
+    def _insert_image(self):
+        """Insert a markdown image reference at the cursor."""
+        cursor = self.content_editor.index("insert")
+        self.content_editor.insert(cursor, "![alt text](image_url)")
+        self.content_editor.focus_set()
+
+    def _insert_table(self):
+        """Show a dialog to insert a markdown table with custom dimensions."""
+        win = ctk.CTkToplevel(self)
+        win.title("Insert Table")
+        win.geometry("300x200")
+        win.configure(fg_color=COLORS["bg_primary"])
+        win.attributes("-topmost", True)
+        win.grab_set()
+
+        ctk.CTkLabel(
+            win, text="📊 Insert Table", font=FONTS["subheading"],
+            text_color=COLORS["text_primary"]
+        ).pack(padx=15, pady=(15, 10))
+
+        size_frame = ctk.CTkFrame(win, fg_color="transparent")
+        size_frame.pack(padx=15, pady=5)
+
+        ctk.CTkLabel(size_frame, text="Columns:", font=FONTS["body"],
+                      text_color=COLORS["text_secondary"]).pack(side="left", padx=(0, 5))
+        cols_var = ctk.StringVar(value="3")
+        ctk.CTkEntry(size_frame, textvariable=cols_var, width=50, height=28,
+                      fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
+                      border_color=COLORS["border"], corner_radius=6).pack(side="left", padx=(0, 15))
+
+        ctk.CTkLabel(size_frame, text="Rows:", font=FONTS["body"],
+                      text_color=COLORS["text_secondary"]).pack(side="left", padx=(0, 5))
+        rows_var = ctk.StringVar(value="3")
+        ctk.CTkEntry(size_frame, textvariable=rows_var, width=50, height=28,
+                      fg_color=COLORS["bg_input"], text_color=COLORS["text_primary"],
+                      border_color=COLORS["border"], corner_radius=6).pack(side="left")
+
+        def insert():
+            try:
+                cols = max(1, min(10, int(cols_var.get())))
+                rows = max(1, min(20, int(rows_var.get())))
+            except ValueError:
+                cols, rows = 3, 3
+            header = "| " + " | ".join(f"Header {c+1}" for c in range(cols)) + " |"
+            sep = "| " + " | ".join("---" for _ in range(cols)) + " |"
+            body = "\n".join(
+                "| " + " | ".join("   " for _ in range(cols)) + " |"
+                for _ in range(rows)
+            )
+            table_text = f"\n{header}\n{sep}\n{body}\n"
+            cursor = self.content_editor.index("insert")
+            self.content_editor.insert(cursor, table_text)
+            self.content_editor.focus_set()
+            win.destroy()
+
+        ctk.CTkButton(
+            win, text="Insert Table", height=34, font=FONTS["body_bold"],
+            fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            corner_radius=8, command=insert
+        ).pack(padx=15, pady=(15, 10))
+
+    # ── Document Stats ────────────────────────────────────────────
+
+    def _update_stats(self):
+        """Update word count, character count, and line count in the status bar."""
+        try:
+            content = self.content_editor.get("1.0", "end-1c")
+            chars = len(content)
+            words = len(content.split()) if content.strip() else 0
+            lines = content.count("\n") + 1 if content.strip() else 0
+            self.stats_label.configure(
+                text=f"Words: {words}  |  Characters: {chars}  |  Lines: {lines}"
+            )
+        except Exception:
+            pass
+
+    # ── Font Size ─────────────────────────────────────────────────
+
+    def _change_font_size(self, size_str):
+        """Change the editor font size."""
+        try:
+            size = int(size_str)
+            self.content_editor.configure(font=("Consolas", size))
+        except (ValueError, Exception):
+            pass
+
+    # ── Find & Replace ────────────────────────────────────────────
+
+    def _show_find_replace(self):
+        """Show a find and replace dialog."""
+        win = ctk.CTkToplevel(self)
+        win.title("Find & Replace")
+        win.geometry("420x200")
+        win.configure(fg_color=COLORS["bg_primary"])
+        win.attributes("-topmost", True)
+
+        ctk.CTkLabel(
+            win, text="🔎 Find & Replace", font=FONTS["subheading"],
+            text_color=COLORS["text_primary"]
+        ).pack(padx=15, pady=(15, 10))
+
+        find_frame = ctk.CTkFrame(win, fg_color="transparent")
+        find_frame.pack(fill="x", padx=15, pady=2)
+        ctk.CTkLabel(find_frame, text="Find:", font=FONTS["body"],
+                      text_color=COLORS["text_secondary"], width=70).pack(side="left")
+        find_entry = ctk.CTkEntry(find_frame, fg_color=COLORS["bg_input"],
+                                   text_color=COLORS["text_primary"], font=FONTS["body"],
+                                   border_color=COLORS["border"], corner_radius=6)
+        find_entry.pack(side="left", fill="x", expand=True)
+
+        replace_frame = ctk.CTkFrame(win, fg_color="transparent")
+        replace_frame.pack(fill="x", padx=15, pady=2)
+        ctk.CTkLabel(replace_frame, text="Replace:", font=FONTS["body"],
+                      text_color=COLORS["text_secondary"], width=70).pack(side="left")
+        replace_entry = ctk.CTkEntry(replace_frame, fg_color=COLORS["bg_input"],
+                                      text_color=COLORS["text_primary"], font=FONTS["body"],
+                                      border_color=COLORS["border"], corner_radius=6)
+        replace_entry.pack(side="left", fill="x", expand=True)
+
+        status_label = ctk.CTkLabel(win, text="", font=FONTS["small"],
+                                     text_color=COLORS["text_muted"])
+        status_label.pack(padx=15, pady=(2, 0))
+
+        btn_row = ctk.CTkFrame(win, fg_color="transparent")
+        btn_row.pack(padx=15, pady=(5, 10))
+
+        def find_next():
+            query = find_entry.get()
+            if not query:
+                return
+            content = self.content_editor.get("1.0", "end-1c")
+            # Find from current cursor position
+            cursor = self.content_editor.index("insert")
+            start_idx = len(self.content_editor.get("1.0", cursor))
+            pos = content.find(query, start_idx)
+            if pos == -1:
+                pos = content.find(query)  # Wrap around
+            if pos == -1:
+                status_label.configure(text="Not found", text_color=COLORS["danger"])
+                return
+            # Convert character offset to tkinter index
+            line = content[:pos].count("\n") + 1
+            col = pos - content[:pos].rfind("\n") - 1
+            start = f"{line}.{col}"
+            end_pos = pos + len(query)
+            end_line = content[:end_pos].count("\n") + 1
+            end_col = end_pos - content[:end_pos].rfind("\n") - 1
+            end = f"{end_line}.{end_col}"
+            self.content_editor.tag_remove("sel", "1.0", "end")
+            self.content_editor.tag_add("sel", start, end)
+            self.content_editor.mark_set("insert", end)
+            self.content_editor.see(start)
+            count = content.count(query)
+            status_label.configure(text=f"{count} match(es) found", text_color=COLORS["success"])
+
+        def replace_one():
+            query = find_entry.get()
+            replacement = replace_entry.get()
+            if not query:
+                return
+            try:
+                sel_start = self.content_editor.index("sel.first")
+                sel_end = self.content_editor.index("sel.last")
+                selected = self.content_editor.get(sel_start, sel_end)
+                if selected == query:
+                    self.content_editor.delete(sel_start, sel_end)
+                    self.content_editor.insert(sel_start, replacement)
+                    status_label.configure(text="Replaced 1 occurrence", text_color=COLORS["success"])
+                    self._update_stats()
+                    find_next()
+                    return
+            except Exception:
+                pass
+            find_next()
+
+        def replace_all():
+            query = find_entry.get()
+            replacement = replace_entry.get()
+            if not query:
+                return
+            content = self.content_editor.get("1.0", "end-1c")
+            count = content.count(query)
+            if count == 0:
+                status_label.configure(text="Not found", text_color=COLORS["danger"])
+                return
+            new_content = content.replace(query, replacement)
+            self.content_editor.delete("1.0", "end")
+            self.content_editor.insert("1.0", new_content)
+            status_label.configure(text=f"Replaced {count} occurrence(s)", text_color=COLORS["success"])
+            self._update_stats()
+
+        ctk.CTkButton(
+            btn_row, text="Find", width=80, height=30, font=FONTS["small"],
+            fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            corner_radius=6, command=find_next
+        ).pack(side="left", padx=3)
+
+        ctk.CTkButton(
+            btn_row, text="Replace", width=80, height=30, font=FONTS["small"],
+            fg_color=COLORS["warning"], corner_radius=6, command=replace_one
+        ).pack(side="left", padx=3)
+
+        ctk.CTkButton(
+            btn_row, text="Replace All", width=90, height=30, font=FONTS["small"],
+            fg_color=COLORS["danger"], corner_radius=6, command=replace_all
+        ).pack(side="left", padx=3)
+
+    # ── Export ────────────────────────────────────────────────────
+
+    def _export_note(self):
+        """Export the current note to a file (.txt, .md, or .docx)."""
+        if not self.selected_note_id:
+            return
+        note = db.get_note(self.selected_note_id)
+        if not note:
+            return
+        # Use current editor content if available
+        try:
+            content = self.content_editor.get("1.0", "end-1c")
+            title = self.title_entry.get().strip() or note["title"]
+        except Exception:
+            content = note["content"]
+            title = note["title"]
+
+        filepath = filedialog.asksaveasfilename(
+            title="Export Note",
+            initialfile=title,
+            defaultextension=".md",
+            filetypes=[
+                ("Markdown", "*.md"),
+                ("Text file", "*.txt"),
+                ("Word Document", "*.docx"),
+            ]
+        )
+        if not filepath:
+            return
+
+        ext = os.path.splitext(filepath)[1].lower()
+        try:
+            if ext == ".docx":
+                self._export_docx(filepath, title, content)
+            else:
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(content)
+            self._show_export_status(f"✅ Exported to {os.path.basename(filepath)}")
+        except Exception as e:
+            self._show_export_status(f"❌ Export failed: {str(e)[:60]}")
+
+    def _export_docx(self, filepath, title, content):
+        """Export note content as a .docx Word document with basic formatting."""
+        try:
+            from docx import Document
+            from docx.shared import Pt, Inches
+            from docx.enum.text import WD_ALIGN_PARAGRAPH
+        except ImportError:
+            # Fall back to plain text if python-docx not installed
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(content)
+            return
+
+        doc = Document()
+        doc.add_heading(title, level=0)
+
+        for line in content.split("\n"):
+            stripped = line.strip()
+            if stripped.startswith("#### "):
+                doc.add_heading(stripped[5:], level=4)
+            elif stripped.startswith("### "):
+                doc.add_heading(stripped[4:], level=3)
+            elif stripped.startswith("## "):
+                doc.add_heading(stripped[3:], level=2)
+            elif stripped.startswith("# "):
+                doc.add_heading(stripped[2:], level=1)
+            elif stripped.startswith("---") or stripped.startswith("***"):
+                p = doc.add_paragraph()
+                p.add_run("─" * 50)
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            elif stripped.startswith("- [ ] "):
+                doc.add_paragraph(stripped[6:], style="List Bullet")
+            elif stripped.startswith("- [x] ") or stripped.startswith("- [X] "):
+                doc.add_paragraph(f"✓ {stripped[6:]}", style="List Bullet")
+            elif stripped.startswith("- "):
+                doc.add_paragraph(stripped[2:], style="List Bullet")
+            elif re.match(r'^\d+\.\s', stripped):
+                doc.add_paragraph(re.sub(r'^\d+\.\s', '', stripped), style="List Number")
+            elif stripped.startswith("> "):
+                p = doc.add_paragraph()
+                run = p.add_run(stripped[2:])
+                run.italic = True
+            elif stripped.startswith("```"):
+                continue
+            elif stripped == "":
+                doc.add_paragraph()
+            else:
+                p = doc.add_paragraph()
+                self._docx_format_line(p, stripped)
+
+        doc.save(filepath)
+
+    def _docx_format_line(self, paragraph, text):
+        """Parse inline markdown formatting and add runs to a docx paragraph."""
+        parts = re.split(r'(\*\*.*?\*\*|\*.*?\*|`.*?`|~~.*?~~)', text)
+        for part in parts:
+            if part.startswith("**") and part.endswith("**"):
+                run = paragraph.add_run(part[2:-2])
+                run.bold = True
+            elif part.startswith("*") and part.endswith("*"):
+                run = paragraph.add_run(part[1:-1])
+                run.italic = True
+            elif part.startswith("`") and part.endswith("`"):
+                run = paragraph.add_run(part[1:-1])
+                run.font.name = "Consolas"
+            elif part.startswith("~~") and part.endswith("~~"):
+                run = paragraph.add_run(part[2:-2])
+                run.font.strike = True
+            elif part:
+                paragraph.add_run(part)
+
+    def _show_export_status(self, message):
+        """Briefly display export status in the stats bar."""
+        try:
+            self.stats_label.configure(text=message)
+            self.after(3000, self._update_stats)
+        except Exception:
+            pass
 
     def _toggle_preview(self):
         """Toggle markdown preview panel side-by-side with editor."""
