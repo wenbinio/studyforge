@@ -26,6 +26,7 @@ def _get_config_dir() -> str:
 CONFIG_PATH = os.path.join(_get_config_dir(), "config.json")
 
 DEFAULTS = {
+    "ai_provider": "anthropic",
     "claude_api_key": "",
     "claude_model": "claude-sonnet-4-5-20250929",
     "claude_model_hypotheticals": "",

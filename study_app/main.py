@@ -21,7 +21,7 @@ else:
 
 from paths import get_config_path, ensure_config_exists, get_user_data_dir, DEFAULT_CONFIG
 from database import init_db
-from claude_client import ClaudeStudyClient
+from claude_client import ClaudeStudyClient, detect_provider_from_key
 from ui.app import StudyForgeApp
 
 
@@ -47,24 +47,25 @@ def load_config() -> dict:
 
 
 def init_claude_client(config: dict):
-    """Initialize the Claude API client if a valid key is present."""
+    """Initialize the configured AI client if a valid key is present."""
     api_key = config.get("claude_api_key", "")
     if not api_key or api_key == "YOUR_API_KEY_HERE":
-        print("[StudyForge] No Claude API key configured. AI features disabled.")
+        print("[StudyForge] No AI API key configured. AI features disabled.")
         return None
 
+    provider = config.get("ai_provider") or detect_provider_from_key(api_key) or "anthropic"
     model = config.get("claude_model", "claude-sonnet-4-5-20250929")
     try:
-        client = ClaudeStudyClient(api_key, model)
+        client = ClaudeStudyClient(api_key, model, provider=provider)
         ok, msg = client.test_connection()
         if ok:
-            print(f"[StudyForge] Claude API connected. Model: {model}")
+            print(f"[StudyForge] {provider} API connected. Model: {model}")
             return client
         else:
-            print(f"[StudyForge] Claude API connection failed: {msg}")
+            print(f"[StudyForge] {provider} API connection failed: {msg}")
             return None
     except Exception as e:
-        print(f"[StudyForge] Error initializing Claude client: {e}")
+        print(f"[StudyForge] Error initializing AI client: {e}")
         return None
 
 
@@ -83,8 +84,8 @@ def main():
     print(f"[StudyForge] Data directory: {config['_data_dir']}")
     print(f"[StudyForge] Config file:    {config['_config_path']}")
 
-    # Initialize Claude client
-    print("[StudyForge] Connecting to Claude API...")
+    # Initialize AI client
+    print("[StudyForge] Connecting to AI API...")
     claude_client = init_claude_client(config)
 
     # Launch the app
