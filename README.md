@@ -79,3 +79,37 @@ The GitHub Actions workflow also builds `.exe` files automatically on each tagge
 - **End users:** Windows 10/11 — no Python needed
 - **Developers:** Python 3.10+ (for running from source or building)
 - Claude API key (optional, for AI features)
+
+## Potential New Use-Cases (Competitive Gap List)
+
+Based on common workflows in Anki, RemNote, Quizlet, Forest, Notion, and Obsidian learning setups, these are high-impact use-cases StudyForge can own next:
+
+1. **Exam countdown planning**  
+   Auto-build a daily review queue from exam date + syllabus weight, not just card due dates.
+
+2. **Course-mode study plans**  
+   Semester templates (law, med, language, STEM) that preconfigure Pomodoro, card limits, and weekly targets.
+
+3. **Missed-question recovery loop**  
+   Convert wrong quiz answers into tagged flashcards automatically and schedule immediate reinforcement.
+
+4. **Source-linked flashcards**  
+   Each card keeps a citation jump-back to the exact note section/PDF page for fast context recovery.
+
+5. **AI oral exam / viva mode**  
+   Voice-style rapid questioning with follow-up depth checks and confidence scoring for verbal prep.
+
+6. **Case briefing workflows (law-specific)**  
+   Generate issue/rule/application/conclusion briefs from notes and turn each section into recall drills.
+
+7. **Memory decay risk alerts**  
+   Predict likely-forgotten topics before they become due and prompt pre-emptive review.
+
+8. **Study accountability mode**  
+   Weekly commitment tracking (hours, streak quality, target completion) with “at-risk” warnings.
+
+9. **Adaptive interleaving by weakness**  
+   Mix topics dynamically based on recent error patterns instead of static random shuffling.
+
+10. **One-click exam simulation**  
+   Time-boxed mixed quiz + short-answer + essay practice set from selected notes/tags.
