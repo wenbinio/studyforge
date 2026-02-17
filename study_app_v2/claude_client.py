@@ -13,6 +13,7 @@ PROVIDER_DEFAULT_MODELS = {
     "openai": "gpt-4o-mini",
     "gemini": "gemini-1.5-flash",
     "perplexity": "sonar",
+    "other": "gpt-4o-mini",
 }
 
 
@@ -33,7 +34,64 @@ def detect_provider_from_key(api_key: str) -> str | None:
 def get_provider_options(api_key: str = "") -> list[str]:
     """Return provider choices, narrowed by detectable API key marker."""
     detected = detect_provider_from_key(api_key)
-    return [detected] if detected else ["anthropic", "openai", "gemini", "perplexity"]
+    return [detected, "other"] if detected else ["anthropic", "openai", "gemini", "perplexity", "other"]
+
+
+def _get_json(url: str, headers: dict[str, str]) -> dict:
+    req = request.Request(url, headers=headers, method="GET")
+    with request.urlopen(req, timeout=10) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def get_provider_models(api_key: str, provider: str) -> list[str]:
+    """Fetch available models for provider via live API checks."""
+    key = (api_key or "").strip()
+    if not key:
+        return []
+    try:
+        if provider == "anthropic":
+            data = _get_json(
+                "https://api.anthropic.com/v1/models",
+                {"x-api-key": key, "anthropic-version": "2023-06-01"},
+            )
+            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+        if provider in ("openai", "other"):
+            data = _get_json(
+                "https://api.openai.com/v1/models",
+                {"Authorization": f"Bearer {key}"},
+            )
+            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+        if provider == "gemini":
+            data = _get_json(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={key}",
+                {},
+            )
+            models = []
+            for m in data.get("models", []):
+                name = (m or {}).get("name", "")
+                if name.startswith("models/"):
+                    name = name.split("/", 1)[1]
+                if name:
+                    models.append(name)
+            return models
+        if provider == "perplexity":
+            data = _get_json(
+                "https://api.perplexity.ai/models",
+                {"Authorization": f"Bearer {key}"},
+            )
+            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+    except Exception:
+        pass
+
+    if provider == "other":
+        preferred = detect_provider_from_key(key)
+        fallbacks = [preferred] if preferred else []
+        fallbacks.extend([p for p in ("openai", "anthropic", "gemini", "perplexity") if p not in fallbacks])
+        for p in fallbacks:
+            models = get_provider_models(key, p)
+            if models:
+                return models
+    return []
 
 
 def _post_json(url: str, headers: dict[str, str], payload: dict) -> dict:
@@ -48,21 +106,28 @@ class ClaudeStudyClient:
         self.api_key = api_key
         self.provider = provider or detect_provider_from_key(api_key) or "anthropic"
         self.model = model or PROVIDER_DEFAULT_MODELS.get(self.provider, PROVIDER_DEFAULT_MODELS["anthropic"])
-        if self.provider == "anthropic":
+        runtime_provider = self.provider
+        if runtime_provider == "other":
+            runtime_provider = detect_provider_from_key(api_key) or "openai"
+        if runtime_provider == "anthropic":
             self.client = Anthropic(api_key=api_key)
         else:
             self.client = None
 
     def _call(self, system: str, user_msg: str, max_tokens: int = 4096) -> str:
-        if self.provider == "anthropic":
+        provider = self.provider
+        if provider == "other":
+            provider = detect_provider_from_key(self.api_key) or "openai"
+
+        if provider == "anthropic":
             response = self.client.messages.create(
                 model=self.model, max_tokens=max_tokens, system=system,
                 messages=[{"role": "user", "content": user_msg}])
             return response.content[0].text
 
-        if self.provider in ("openai", "perplexity"):
+        if provider in ("openai", "perplexity", "other"):
             url = "https://api.openai.com/v1/chat/completions"
-            if self.provider == "perplexity":
+            if provider == "perplexity":
                 url = "https://api.perplexity.ai/chat/completions"
             data = _post_json(
                 url,
@@ -81,7 +146,7 @@ class ClaudeStudyClient:
             )
             return data["choices"][0]["message"]["content"]
 
-        if self.provider == "gemini":
+        if provider == "gemini":
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
             data = _post_json(
                 url,

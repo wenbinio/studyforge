@@ -11,6 +11,7 @@ from claude_client import (
     ClaudeStudyClient,
     detect_provider_from_key,
     get_provider_options,
+    get_provider_models,
     PROVIDER_DEFAULT_MODELS,
 )
 
@@ -78,7 +79,7 @@ class SetupWizard(ctk.CTkFrame):
                      text_color=COLORS["text_secondary"], width=80, anchor="w").pack(side="left")
         self.provider_var = ctk.StringVar(value="anthropic")
         self.provider_menu = ctk.CTkOptionMenu(
-            provider_row, variable=self.provider_var, values=["anthropic", "openai", "gemini", "perplexity"],
+            provider_row, variable=self.provider_var, values=["anthropic", "openai", "gemini", "perplexity", "other"],
             fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
             font=FONTS["body"], corner_radius=8, width=220,
             command=self._on_provider_change
@@ -155,6 +156,9 @@ class SetupWizard(ctk.CTkFrame):
 
         provider = self.provider_var.get()
         model = PROVIDER_DEFAULT_MODELS.get(provider, "claude-sonnet-4-5-20250929")
+        live_models = get_provider_models(key, provider)
+        if live_models:
+            model = live_models[0]
 
         def run():
             ok, msg = ClaudeStudyClient.test_key(key, model=model, provider=provider)
@@ -173,7 +177,11 @@ class SetupWizard(ctk.CTkFrame):
         if key:
             cfg.set_api_key(key)
         cfg.update_setting("ai_provider", self.provider_var.get())
-        cfg.update_setting("claude_model", PROVIDER_DEFAULT_MODELS.get(self.provider_var.get(), "claude-sonnet-4-5-20250929"))
+        model = PROVIDER_DEFAULT_MODELS.get(self.provider_var.get(), "claude-sonnet-4-5-20250929")
+        live_models = get_provider_models(key, self.provider_var.get()) if key else []
+        if live_models:
+            model = live_models[0]
+        cfg.update_setting("claude_model", model)
         cfg.mark_setup_complete()
         self.on_complete(key)
 
@@ -184,7 +192,7 @@ class SetupWizard(ctk.CTkFrame):
     def _refresh_provider_choices(self):
         key = self.key_entry.get().strip()
         if self.show_all_var.get():
-            options = ["anthropic", "openai", "gemini", "perplexity"]
+            options = ["anthropic", "openai", "gemini", "perplexity", "other"]
         else:
             options = get_provider_options(key)
         self.provider_menu.configure(values=options)
@@ -201,5 +209,6 @@ class SetupWizard(ctk.CTkFrame):
             "openai": "Get a key at platform.openai.com → API keys",
             "gemini": "Get a key at aistudio.google.com → Get API key",
             "perplexity": "Get a key at perplexity.ai/settings/api",
+            "other": "Catch-all provider — models are discovered live from your key",
         }
         self.key_help_label.configure(text=hints.get(provider, hints["anthropic"]))
