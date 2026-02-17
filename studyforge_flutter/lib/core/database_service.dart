@@ -255,6 +255,26 @@ CREATE TABLE participation_questions (
     return rows.first['count'] as int? ?? 0;
   }
 
+  Future<int> addRubric(Rubric rubric) async {
+    final db = await database;
+    return db.insert('rubrics', rubric.toMap()..remove('id'));
+  }
+
+  Future<List<Rubric>> getRubrics() async {
+    final db = await database;
+    final rows = await db.query('rubrics', orderBy: 'created_at DESC');
+    return rows.map(Rubric.fromMap).toList();
+  }
+
+  Future<Rubric?> getRubric(int id) async {
+    final db = await database;
+    final rows = await db.query('rubrics', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) {
+      return null;
+    }
+    return Rubric.fromMap(rows.first);
+  }
+
   String _dateOnly(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
