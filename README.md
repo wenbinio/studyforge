@@ -74,6 +74,13 @@ build.bat
 
 The GitHub Actions workflow also builds `.exe` files automatically on each tagged release.
 
+## Future Development
+
+Interested in contributing or seeing what's next? Check out:
+- **[COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)** — Detailed analysis of study app competitors and feature opportunities
+- **[FEATURE_IDEAS_QUICK_REF.md](FEATURE_IDEAS_QUICK_REF.md)** — Quick reference list of potential new features
+- **[USER_RESEARCH_TEMPLATE.md](USER_RESEARCH_TEMPLATE.md)** — Survey and interview templates for validating feature ideas
+
 ## Requirements
 
 - **End users:** Windows 10/11 — no Python needed
