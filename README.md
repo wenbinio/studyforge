@@ -30,6 +30,9 @@ A simplified version with first-run setup wizard:
 - In-app configuration via setup wizard and Settings tab
 - See [study_app_v2/README.md](study_app_v2/README.md) for quick start guide
 
+### Product Strategy Docs
+- [competitive_analysis.md](competitive_analysis.md) — tightened competitive analysis and roadmap decision gates
+
 ## Key Features
 
 - **Pomodoro Timer** — Configurable work/break intervals with session tracking
