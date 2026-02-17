@@ -12,6 +12,7 @@ from claude_client import (
     ClaudeStudyClient,
     detect_provider_from_key,
     get_provider_options,
+    get_provider_models,
     PROVIDER_DEFAULT_MODELS,
 )
 
@@ -237,7 +238,7 @@ class SettingsTab(ctk.CTkFrame):
     def _refresh_provider_choices(self):
         key = self.key_entry.get().strip()
         if self.show_all_var.get():
-            options = ["anthropic", "openai", "gemini", "perplexity"]
+            options = ["anthropic", "openai", "gemini", "perplexity", "other"]
         else:
             options = get_provider_options(key)
         self._provider_options = options
@@ -252,21 +253,29 @@ class SettingsTab(ctk.CTkFrame):
     def _on_provider_change(self, provider):
         current_model = self.model_var.get()
         if provider == "anthropic":
-            models = [
+            fallback_models = [
                 "claude-sonnet-4-5-20250929",
                 "claude-haiku-4-5-20251001",
                 "claude-opus-4-6",
             ]
             hint = "Get your key at console.anthropic.com → API Keys → Create Key"
         elif provider == "openai":
-            models = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]
+            fallback_models = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]
             hint = "Get your key at platform.openai.com → API keys"
         elif provider == "gemini":
-            models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"]
+            fallback_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"]
             hint = "Get your key at aistudio.google.com → Get API key"
-        else:
-            models = ["sonar", "sonar-pro", "sonar-reasoning-pro"]
+        elif provider == "perplexity":
+            fallback_models = ["sonar", "sonar-pro", "sonar-reasoning-pro"]
             hint = "Get your key at perplexity.ai/settings/api"
+        else:
+            fallback_models = ["gpt-4o-mini", "gpt-4o"]
+            hint = "Catch-all provider — enter key and models will be discovered live"
+
+        key = self.key_entry.get().strip()
+        models = get_provider_models(key, provider) if key else []
+        if not models:
+            models = fallback_models
 
         self.model_menu.configure(values=models)
         self.model_var.set(current_model if current_model in models else PROVIDER_DEFAULT_MODELS[provider])
