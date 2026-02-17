@@ -79,3 +79,17 @@ The GitHub Actions workflow also builds `.exe` files automatically on each tagge
 - **End users:** Windows 10/11 — no Python needed
 - **Developers:** Python 3.10+ (for running from source or building)
 - Claude API key (optional, for AI features)
+
+---
+
+## 📚 Research & Development
+
+**New to the project?** Check out our comprehensive research documents:
+
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** ⭐ **Start here!** — One-page overview of research findings
+- **[FEATURE_RECOMMENDATIONS.md](FEATURE_RECOMMENDATIONS.md)** — 32 feature opportunities with detailed analysis
+- **[NEW_USE_CASES.md](NEW_USE_CASES.md)** — Quick reference guide and use case matrix
+- **[ROADMAP.md](ROADMAP.md)** — Visual 12-month implementation roadmap
+- **[COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)** — Comparison with Anki, Quizlet, RemNote, and others
+
+These documents outline how StudyForge can grow from a niche law student tool to a mainstream study app with **115M+ potential users** and a **$1B+ addressable market**.
