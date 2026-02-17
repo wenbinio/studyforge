@@ -18,7 +18,7 @@ It currently covers the major module surface (Dashboard, Notes, Flashcards, Quiz
 | Notes find/replace | `ui/notes.py` `_show_find_replace()` | No find/replace UI in notes page | ❌ Missing |
 | Notes navigator / preview / focus-mode editor tooling | `ui/notes.py` includes navigator + preview/focus-mode functions | Notes page is basic editor/list only | ❌ Missing |
 | Flashcards review (SM-2) | Review with SM-2 in `ui/flashcards.py` | SM-2 review in `features/flashcards/flashcards_page.dart` + `core/srs_service.dart` | ✅ Parity |
-| Flashcards interleaved review | `ui/flashcards.py` `start_interleaved_review()` | No interleaved review mode in Flutter page | ❌ Missing |
+| Flashcards interleaved review | `ui/flashcards.py` `start_interleaved_review()` | `features/flashcards/flashcards_page.dart` includes Normal/Interleaved review modes with shuffled due queue and topic count state | ✅ Implemented |
 | Flashcards AI generation from notes | `ui/flashcards.py` `show_ai_generate_dialog()` | `features/flashcards/flashcards_page.dart` AI generation from selected note using provider settings | ✅ Implemented |
 | Quiz single + interleaved | `ui/quiz.py` supports single and interleaved multi-note quiz generation | `features/quiz/quiz_page.dart` generates one quiz from top notes batch only | ⚠️ Partial |
 | Essay rubric workflow | `ui/essays.py` includes rubric upload/management (`extract_rubric_text`, rubric selection) | `features/essays/essays_page.dart` has prompt+draft grading only | ❌ Missing |
@@ -47,7 +47,6 @@ But `flutter` is not installed in the sandbox (`bash: flutter: command not found
 ## Priority Gaps to Reach Desktop Parity
 
 1. **Notes power features**: import (`pdf/docx`), export, find/replace, preview/navigator/focus-mode.
-2. **Flashcards advanced modes**: interleaved review.
+2. **Quiz interleaved mode parity**: multi-note user-selected interleaving and topic-aware result handling.
 3. **Essay rubric support**: rubric upload/selection and rubric-aware grading prompt.
-4. **Quiz interleaved mode**: multi-note user selection and topic-aware result handling.
-5. **Settings test-connection UX**: explicit key/model/provider test action.
+4. **Settings test-connection UX**: explicit key/model/provider test action.

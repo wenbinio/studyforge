@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_controller.dart';
 import '../../core/ai_parsers.dart';
+import '../../core/flashcard_review.dart';
 import '../../core/models.dart';
 
 class FlashcardsPage extends StatefulWidget {
@@ -24,6 +25,8 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   bool showBack = false;
   bool generatingAiCards = false;
   int? selectedNoteId;
+  bool interleavedMode = false;
+  int topicCount = 0;
 
   @override
   void initState() {
@@ -42,11 +45,13 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
 
   Future<void> _loadDueCards() async {
     final cards = await widget.controller.database.getFlashcards(dueOnly: true);
+    final queue = buildReviewQueue(cards, interleaved: interleavedMode);
     if (!mounted) {
       return;
     }
     setState(() {
-      dueCards = cards;
+      dueCards = queue;
+      topicCount = interleavedMode ? interleavedTopicCount(cards) : 0;
       currentIndex = 0;
       showBack = false;
     });
@@ -108,6 +113,13 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     );
     await widget.controller.database.incrementDailyStat('cards_reviewed', 1);
 
+    await _loadDueCards();
+  }
+
+  Future<void> _setInterleavedMode(bool enabled) async {
+    setState(() {
+      interleavedMode = enabled;
+    });
     await _loadDueCards();
   }
 
@@ -193,8 +205,30 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Due cards: ${dueCards.length}', style: Theme.of(context).textTheme.titleMedium),
+        if (interleavedMode)
+          Text(
+            'Interleaved due cards: ${dueCards.length} across $topicCount topic${topicCount == 1 ? '' : 's'}',
+            style: Theme.of(context).textTheme.titleMedium,
+          )
+        else
+          Text('Due cards: ${dueCards.length}', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment<bool>(value: false, label: Text('Normal')),
+            ButtonSegment<bool>(value: true, label: Text('Interleaved')),
+          ],
+          selected: {interleavedMode},
+          onSelectionChanged: (selection) => _setInterleavedMode(selection.first),
+        ),
+        const SizedBox(height: 8),
+        if (interleavedMode && topicCount < 2 && dueCards.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Only one topic in due cards. Interleaving works best across multiple topics.',
+            ),
+          ),
         Card(
           child: SizedBox(
             height: 180,
