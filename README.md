@@ -30,6 +30,13 @@ A simplified version with first-run setup wizard:
 - In-app configuration via setup wizard and Settings tab
 - See [study_app_v2/README.md](study_app_v2/README.md) for quick start guide
 
+### `studyforge_flutter/` — Flutter Rebuild (Mobile Track)
+A Flutter rewrite in a separate top-level folder for Android/iOS delivery:
+- Native Flutter UI with all major StudyForge modules as tabs
+- SQLite local-first data layer and SM-2 scheduling logic ported to Dart
+- Android APK build support via `flutter build apk`
+- See [studyforge_flutter/README.md](studyforge_flutter/README.md) for setup and build instructions
+
 ## Key Features
 
 - **Pomodoro Timer** — Configurable work/break intervals with session tracking
