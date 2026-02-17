@@ -20,7 +20,7 @@ It currently covers the major module surface (Dashboard, Notes, Flashcards, Quiz
 | Flashcards review (SM-2) | Review with SM-2 in `ui/flashcards.py` | SM-2 review in `features/flashcards/flashcards_page.dart` + `core/srs_service.dart` | ✅ Parity |
 | Flashcards interleaved review | `ui/flashcards.py` `start_interleaved_review()` | `features/flashcards/flashcards_page.dart` includes Normal/Interleaved review modes with shuffled due queue and topic count state | ✅ Implemented |
 | Flashcards AI generation from notes | `ui/flashcards.py` `show_ai_generate_dialog()` | `features/flashcards/flashcards_page.dart` AI generation from selected note using provider settings | ✅ Implemented |
-| Quiz single + interleaved | `ui/quiz.py` supports single and interleaved multi-note quiz generation | `features/quiz/quiz_page.dart` generates one quiz from top notes batch only | ⚠️ Partial |
+| Quiz single + interleaved | `ui/quiz.py` supports single and interleaved multi-note quiz generation | `features/quiz/quiz_page.dart` now supports single-note selection and interleaved multi-note selection; still lacks desktop-style per-topic quiz-result breakdown UI | ⚠️ Partial |
 | Essay rubric workflow | `ui/essays.py` includes rubric upload/management (`extract_rubric_text`, rubric selection) | `features/essays/essays_page.dart` has prompt+draft grading only | ❌ Missing |
 | Settings connection test UX | Desktop settings has `_test_connection()` action and live status | Flutter settings saves config but no explicit connection test button | ⚠️ Partial |
 
@@ -47,6 +47,6 @@ But `flutter` is not installed in the sandbox (`bash: flutter: command not found
 ## Priority Gaps to Reach Desktop Parity
 
 1. **Notes power features**: import (`pdf/docx`), export, find/replace, preview/navigator/focus-mode.
-2. **Quiz interleaved mode parity**: multi-note user-selected interleaving and topic-aware result handling.
+2. **Quiz result parity polish**: desktop-style per-topic result breakdown for interleaved quizzes.
 3. **Essay rubric support**: rubric upload/selection and rubric-aware grading prompt.
 4. **Settings test-connection UX**: explicit key/model/provider test action.
