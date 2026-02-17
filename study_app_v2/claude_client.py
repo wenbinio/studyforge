@@ -4,19 +4,96 @@ claude_client.py — Claude API integration for StudyForge.
 
 import json
 import re
+from urllib import request
 from anthropic import Anthropic
 
 
+PROVIDER_DEFAULT_MODELS = {
+    "anthropic": "claude-sonnet-4-5-20250929",
+    "openai": "gpt-4o-mini",
+    "gemini": "gemini-1.5-flash",
+    "perplexity": "sonar",
+}
+
+
+def detect_provider_from_key(api_key: str) -> str | None:
+    """Infer provider from common API key markers."""
+    key = (api_key or "").strip()
+    if key.startswith("sk-ant-"):
+        return "anthropic"
+    if key.startswith("sk-proj-") or key.startswith("sk-"):
+        return "openai"
+    if key.startswith("AIza"):
+        return "gemini"
+    if key.startswith("pplx-"):
+        return "perplexity"
+    return None
+
+
+def get_provider_options(api_key: str = "") -> list[str]:
+    """Return provider choices, narrowed by detectable API key marker."""
+    detected = detect_provider_from_key(api_key)
+    return [detected] if detected else ["anthropic", "openai", "gemini", "perplexity"]
+
+
+def _post_json(url: str, headers: dict[str, str], payload: dict) -> dict:
+    data = json.dumps(payload).encode("utf-8")
+    req = request.Request(url, data=data, headers=headers, method="POST")
+    with request.urlopen(req, timeout=45) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
 class ClaudeStudyClient:
-    def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929"):
-        self.client = Anthropic(api_key=api_key)
-        self.model = model
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929", provider: str | None = None):
+        self.api_key = api_key
+        self.provider = provider or detect_provider_from_key(api_key) or "anthropic"
+        self.model = model or PROVIDER_DEFAULT_MODELS.get(self.provider, PROVIDER_DEFAULT_MODELS["anthropic"])
+        if self.provider == "anthropic":
+            self.client = Anthropic(api_key=api_key)
+        else:
+            self.client = None
 
     def _call(self, system: str, user_msg: str, max_tokens: int = 4096) -> str:
-        response = self.client.messages.create(
-            model=self.model, max_tokens=max_tokens, system=system,
-            messages=[{"role": "user", "content": user_msg}])
-        return response.content[0].text
+        if self.provider == "anthropic":
+            response = self.client.messages.create(
+                model=self.model, max_tokens=max_tokens, system=system,
+                messages=[{"role": "user", "content": user_msg}])
+            return response.content[0].text
+
+        if self.provider in ("openai", "perplexity"):
+            url = "https://api.openai.com/v1/chat/completions"
+            if self.provider == "perplexity":
+                url = "https://api.perplexity.ai/chat/completions"
+            data = _post_json(
+                url,
+                {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                {
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user_msg},
+                    ],
+                    "max_tokens": min(max_tokens, 2048),
+                },
+            )
+            return data["choices"][0]["message"]["content"]
+
+        if self.provider == "gemini":
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+            data = _post_json(
+                url,
+                {"Content-Type": "application/json"},
+                {
+                    "contents": [{"parts": [{"text": f"{system}\n\n{user_msg}"}]}],
+                    "generationConfig": {"maxOutputTokens": min(max_tokens, 2048)},
+                },
+            )
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+
+        raise ValueError(f"Unsupported provider: {self.provider}")
 
     def _parse_json(self, text: str):
         text = text.strip()
@@ -80,13 +157,13 @@ One-line definition, then deeper explanation with analogy, key distinctions. Und
         return self._call(system, prompt, 2000)
 
     @staticmethod
-    def test_key(api_key: str, model: str = "claude-sonnet-4-5-20250929") -> tuple[bool, str]:
+    def test_key(api_key: str, model: str = "claude-sonnet-4-5-20250929", provider: str | None = None) -> tuple[bool, str]:
         """Test if an API key is valid. Returns (success, message)."""
         try:
-            client = Anthropic(api_key=api_key)
-            resp = client.messages.create(
-                model=model, max_tokens=20,
-                messages=[{"role": "user", "content": "Say 'connected' only."}])
+            resolved_provider = provider or detect_provider_from_key(api_key) or "anthropic"
+            resolved_model = model or PROVIDER_DEFAULT_MODELS.get(resolved_provider, PROVIDER_DEFAULT_MODELS["anthropic"])
+            client = ClaudeStudyClient(api_key, resolved_model, resolved_provider)
+            client._call("You are a helpful assistant.", "Say 'connected' only.", max_tokens=20)
             return True, "Connected successfully"
         except Exception as e:
             err = str(e)
@@ -100,10 +177,14 @@ One-line definition, then deeper explanation with analogy, key distinctions. Und
 
     def _call_with_model(self, system: str, user_msg: str, max_tokens: int = 4096, model_override: str = None) -> str:
         """Call Claude with an optional model override."""
-        response = self.client.messages.create(
-            model=model_override or self.model, max_tokens=max_tokens, system=system,
-            messages=[{"role": "user", "content": user_msg}])
-        return response.content[0].text
+        if not model_override:
+            return self._call(system, user_msg, max_tokens=max_tokens)
+        original_model = self.model
+        try:
+            self.model = model_override
+            return self._call(system, user_msg, max_tokens=max_tokens)
+        finally:
+            self.model = original_model
 
     def generate_hypothetical(self, note_content: str, topic: str = "", model_override: str = None) -> dict:
         """Generate a legal hypothetical scenario from notes.

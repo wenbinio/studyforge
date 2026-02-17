@@ -13,6 +13,7 @@ import shutil
 
 
 DEFAULT_CONFIG = {
+    "ai_provider": "anthropic",
     "claude_api_key": "YOUR_API_KEY_HERE",
     "claude_model": "claude-sonnet-4-5-20250929",
     "pomodoro_work_minutes": 25,

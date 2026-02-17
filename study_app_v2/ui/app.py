@@ -48,15 +48,19 @@ class StudyForgeApp(ctk.CTk):
     def _wizard_complete(self, api_key: str):
         """Called when wizard finishes. Connects API if key provided, then builds main UI."""
         self.wizard.destroy()
+        self.config = cfg.load_config()
 
         if api_key:
             try:
                 from claude_client import ClaudeStudyClient
-                self.claude_client = ClaudeStudyClient(api_key, self.config.get("claude_model", "claude-sonnet-4-5-20250929"))
+                self.claude_client = ClaudeStudyClient(
+                    api_key,
+                    self.config.get("claude_model", "claude-sonnet-4-5-20250929"),
+                    provider=self.config.get("ai_provider", "anthropic")
+                )
             except Exception:
                 self.claude_client = None
 
-        self.config = cfg.load_config()
         self._build_main()
 
     def _build_main(self):

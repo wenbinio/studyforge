@@ -7,7 +7,12 @@ import customtkinter as ctk
 import threading
 from ui.styles import COLORS, FONTS, PAD
 import config_manager as cfg
-from claude_client import ClaudeStudyClient
+from claude_client import (
+    ClaudeStudyClient,
+    detect_provider_from_key,
+    get_provider_options,
+    PROVIDER_DEFAULT_MODELS,
+)
 
 
 class SettingsTab(ctk.CTkFrame):
@@ -29,7 +34,7 @@ class SettingsTab(ctk.CTkFrame):
         ai_card = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
         ai_card.pack(fill="x", pady=(0, 12))
 
-        ctk.CTkLabel(ai_card, text="🤖 Claude AI Integration", font=FONTS["subheading"],
+        ctk.CTkLabel(ai_card, text="🤖 AI Integration", font=FONTS["subheading"],
                       text_color=COLORS["text_primary"]).pack(padx=PAD["section"], pady=(PAD["section"], 4), anchor="w")
         ctk.CTkLabel(ai_card, text="Powers flashcard generation, quizzes, summaries, and Q&A.",
                       font=FONTS["small"], text_color=COLORS["text_muted"]).pack(padx=PAD["section"], anchor="w")
@@ -48,6 +53,7 @@ class SettingsTab(ctk.CTkFrame):
         )
         self.key_entry.pack(side="left", fill="x", expand=True, padx=(0, 6))
 
+        config = cfg.load_config()
         # Load existing key
         existing_key = cfg.get_api_key()
         if existing_key:
@@ -61,9 +67,36 @@ class SettingsTab(ctk.CTkFrame):
         self.toggle_vis_btn.pack(side="left")
 
         # Key help text
-        ctk.CTkLabel(ai_card, text="Get your key at console.anthropic.com → API Keys → Create Key",
-                      font=("Segoe UI", 10), text_color=COLORS["text_muted"]
-        ).pack(padx=PAD["section"], anchor="w", pady=(0, 6))
+        self.key_help_label = ctk.CTkLabel(
+            ai_card, text="Get your key at console.anthropic.com → API Keys → Create Key",
+            font=("Segoe UI", 10), text_color=COLORS["text_muted"]
+        )
+        self.key_help_label.pack(padx=PAD["section"], anchor="w", pady=(0, 6))
+
+        # Provider selector
+        provider_frame = ctk.CTkFrame(ai_card, fg_color="transparent")
+        provider_frame.pack(fill="x", padx=PAD["section"], pady=(0, 4))
+
+        ctk.CTkLabel(provider_frame, text="Provider:", font=FONTS["body"],
+                      text_color=COLORS["text_secondary"], width=80, anchor="w").pack(side="left")
+
+        detected_provider = detect_provider_from_key(existing_key)
+        provider_value = config.get("ai_provider") or detected_provider or "anthropic"
+        self.provider_var = ctk.StringVar(value=provider_value)
+        self._provider_menu = ctk.CTkOptionMenu(
+            provider_frame, variable=self.provider_var,
+            values=get_provider_options(existing_key),
+            fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
+            font=FONTS["body"], corner_radius=8, width=300,
+            command=self._on_provider_change
+        )
+        self._provider_menu.pack(side="left", padx=(0, 8))
+
+        self.show_all_var = ctk.BooleanVar(value=False)
+        ctk.CTkCheckBox(
+            provider_frame, text="Show all", variable=self.show_all_var,
+            command=self._refresh_provider_choices, font=FONTS["small"]
+        ).pack(side="left")
 
         # Model selector
         model_frame = ctk.CTkFrame(ai_card, fg_color="transparent")
@@ -72,18 +105,14 @@ class SettingsTab(ctk.CTkFrame):
         ctk.CTkLabel(model_frame, text="Model:", font=FONTS["body"],
                       text_color=COLORS["text_secondary"], width=80, anchor="w").pack(side="left")
 
-        config = cfg.load_config()
         self.model_var = ctk.StringVar(value=config.get("claude_model", "claude-sonnet-4-5-20250929"))
-        ctk.CTkOptionMenu(
+        self.model_menu = ctk.CTkOptionMenu(
             model_frame, variable=self.model_var,
-            values=[
-                "claude-sonnet-4-5-20250929",
-                "claude-haiku-4-5-20251001",
-                "claude-opus-4-6",
-            ],
+            values=[self.model_var.get()],
             fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
             font=FONTS["body"], corner_radius=8, width=300
-        ).pack(side="left", padx=(0, 6))
+        )
+        self.model_menu.pack(side="left", padx=(0, 6))
 
         # Buttons: Test + Save
         btn_frame = ctk.CTkFrame(ai_card, fg_color="transparent")
@@ -118,6 +147,8 @@ class SettingsTab(ctk.CTkFrame):
             self.api_status.configure(text="🟡 Key saved — click Test Connection to verify", text_color=COLORS["warning"])
         else:
             self.api_status.configure(text="🔴 No API key configured — AI features are disabled", text_color=COLORS["danger"])
+        self.key_entry.bind("<KeyRelease>", lambda _e: self._refresh_provider_choices())
+        self._refresh_provider_choices()
 
         # ── Pomodoro Settings ─────────────────────────────────────
         pom_card = ctk.CTkFrame(scroll, fg_color=COLORS["bg_card"], corner_radius=12)
@@ -202,6 +233,38 @@ class SettingsTab(ctk.CTkFrame):
         self.key_entry.configure(show="" if self._key_visible else "•")
         self.toggle_vis_btn.configure(text="🙈" if self._key_visible else "👁")
 
+    def _refresh_provider_choices(self):
+        key = self.key_entry.get().strip()
+        if self.show_all_var.get():
+            options = ["anthropic", "openai", "gemini", "perplexity"]
+        else:
+            options = get_provider_options(key)
+        self._provider_menu.configure(values=options)
+        detected = detect_provider_from_key(key)
+        if detected and not self.show_all_var.get():
+            self.provider_var.set(detected)
+        elif self.provider_var.get() not in options:
+            self.provider_var.set(options[0])
+        self._on_provider_change(self.provider_var.get())
+
+    def _on_provider_change(self, provider):
+        current_model = self.model_var.get()
+        if provider == "anthropic":
+            models = ["claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001", "claude-opus-4-6"]
+            hint = "Get your key at console.anthropic.com → API Keys → Create Key"
+        elif provider == "openai":
+            models = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]
+            hint = "Get your key at platform.openai.com → API keys"
+        elif provider == "gemini":
+            models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"]
+            hint = "Get your key at aistudio.google.com → Get API key"
+        else:
+            models = ["sonar", "sonar-pro", "sonar-reasoning-pro"]
+            hint = "Get your key at perplexity.ai/settings/api"
+        self.model_menu.configure(values=models)
+        self.model_var.set(current_model if current_model in models else PROVIDER_DEFAULT_MODELS[provider])
+        self.key_help_label.configure(text=hint)
+
     def _test_connection(self):
         key = self.key_entry.get().strip()
         if not key:
@@ -209,15 +272,16 @@ class SettingsTab(ctk.CTkFrame):
             return
 
         model = self.model_var.get()
+        provider = self.provider_var.get()
         self.test_btn.configure(state="disabled", text="⏳ Testing...")
         self.api_status.configure(text="Testing connection...", text_color=COLORS["text_secondary"])
 
         def do_test():
-            ok, msg = ClaudeStudyClient.test_key(key, model)
+            ok, msg = ClaudeStudyClient.test_key(key, model, provider=provider)
             def update():
                 self.test_btn.configure(state="normal", text="🔌 Test Connection")
                 if ok:
-                    self.api_status.configure(text=f"🟢 {msg}  ·  Model: {model}", text_color=COLORS["success"])
+                    self.api_status.configure(text=f"🟢 {msg}  ·  {provider} / {model}", text_color=COLORS["success"])
                 else:
                     self.api_status.configure(text=f"🔴 {msg}", text_color=COLORS["danger"])
             self.after(0, update)
@@ -227,14 +291,16 @@ class SettingsTab(ctk.CTkFrame):
     def _save_api_settings(self):
         key = self.key_entry.get().strip()
         model = self.model_var.get()
+        provider = self.provider_var.get()
 
         cfg.set_api_key(key)
         cfg.update_setting("claude_model", model)
+        cfg.update_setting("ai_provider", provider)
 
         # Reconnect the client
         if key:
             try:
-                client = ClaudeStudyClient(key, model)
+                client = ClaudeStudyClient(key, model, provider=provider)
                 self.app.claude_client = client
                 self.app.update_api_indicator(True)
                 self.api_status.configure(text="🟢 API settings saved and connected", text_color=COLORS["success"])

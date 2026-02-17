@@ -19,28 +19,29 @@ else:
     sys.path.insert(0, PROJECT_DIR)
 
 from database import init_db
-from config_manager import load_config, is_first_run, get_api_key
-from claude_client import ClaudeStudyClient
+from config_manager import load_config, is_first_run
+from claude_client import ClaudeStudyClient, detect_provider_from_key
 from ui.app import StudyForgeApp
 
 
 def try_connect_claude(config: dict):
-    """Attempt to connect to Claude API. Returns client or None."""
+    """Attempt to connect to configured AI API. Returns client or None."""
     key = config.get("claude_api_key", "")
     if not key:
         return None
 
+    provider = config.get("ai_provider") or detect_provider_from_key(key) or "anthropic"
     model = config.get("claude_model", "claude-sonnet-4-5-20250929")
     try:
-        client = ClaudeStudyClient(key, model)
-        ok, _ = client.test_key(key, model)
+        client = ClaudeStudyClient(key, model, provider=provider)
+        ok, _ = client.test_key(key, model, provider=provider)
         if ok:
-            print(f"[StudyForge] Claude connected  ·  Model: {model}")
+            print(f"[StudyForge] {provider} connected  ·  Model: {model}")
             return client
-        print("[StudyForge] Claude API key invalid — AI features disabled")
+        print("[StudyForge] AI API key invalid — AI features disabled")
         return None
     except Exception as e:
-        print(f"[StudyForge] Claude connection failed: {e}")
+        print(f"[StudyForge] AI connection failed: {e}")
         return None
 
 
