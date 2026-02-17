@@ -79,3 +79,7 @@ The GitHub Actions workflow also builds `.exe` files automatically on each tagge
 - **End users:** Windows 10/11 — no Python needed
 - **Developers:** Python 3.10+ (for running from source or building)
 - Claude API key (optional, for AI features)
+
+## Android App Update Policy
+
+The Android app is currently frozen and must not be updated unless explicitly requested.
