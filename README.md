@@ -77,7 +77,8 @@ The GitHub Actions workflow also builds `.exe` files automatically on each tagge
 ## Future Development
 
 Interested in contributing or seeing what's next? Check out:
-- **[COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)** — Detailed analysis of study app competitors and feature opportunities
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** — Executive summary with roadmap, monetization strategy, and top priorities
+- **[COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md)** — Detailed analysis of study app competitors and feature opportunities (25+ ideas)
 - **[FEATURE_IDEAS_QUICK_REF.md](FEATURE_IDEAS_QUICK_REF.md)** — Quick reference list of potential new features
 - **[USER_RESEARCH_TEMPLATE.md](USER_RESEARCH_TEMPLATE.md)** — Survey and interview templates for validating feature ideas
 
