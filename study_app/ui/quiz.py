@@ -6,7 +6,7 @@ Supports single-note and interleaved (multi-note) quiz modes.
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 
 
@@ -60,8 +60,8 @@ class QuizTab(ctk.CTkFrame):
         self.single_btn = ctk.CTkButton(
             mode_frame, text="📝 Single Note", width=130, height=32,
             font=FONTS["body"],
-            fg_color=COLORS["accent"] if not self.is_interleaved else COLORS["bg_secondary"],
-            hover_color=COLORS["accent_hover"], corner_radius=8,
+            fg_color=BUTTON_VARIANTS["primary"]["fg_color"] if not self.is_interleaved else BUTTON_VARIANTS["secondary"]["fg_color"],
+            hover_color=BUTTON_VARIANTS["primary"]["hover_color"], corner_radius=8,
             command=lambda: self._set_quiz_mode(False)
         )
         self.single_btn.pack(side="left", padx=(8, 3))
@@ -172,15 +172,15 @@ class QuizTab(ctk.CTkFrame):
 
             ctk.CTkButton(
                 ctrl_row, text="Select All", width=90, height=26,
-                font=FONTS["small"], fg_color=COLORS["bg_secondary"],
-                hover_color=COLORS["accent"], corner_radius=6,
+                font=FONTS["small"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
+                hover_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=6,
                 command=lambda: self._toggle_all_notes(True)
             ).pack(side="left", padx=(0, 4))
 
             ctk.CTkButton(
                 ctrl_row, text="Deselect All", width=90, height=26,
-                font=FONTS["small"], fg_color=COLORS["bg_secondary"],
-                hover_color=COLORS["accent"], corner_radius=6,
+                font=FONTS["small"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
+                hover_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=6,
                 command=lambda: self._toggle_all_notes(False)
             ).pack(side="left")
 
@@ -531,7 +531,7 @@ class QuizTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="🏠 Dashboard", width=130, height=38,
-            font=FONTS["body"], fg_color=COLORS["bg_secondary"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
             corner_radius=8, command=lambda: self.app.select_tab("Dashboard")
         ).pack(side="left", padx=6)
 

@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 from srs_engine import review_card, get_rating_labels
 
@@ -25,7 +25,7 @@ class FlashcardsTab(ctk.CTkFrame):
         br = ctk.CTkFrame(header, fg_color="transparent")
         br.pack(side="right")
         self.review_btn = ctk.CTkButton(br, text="📖 Review Due", width=120, height=34,
-            font=FONTS["body"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body"], **BUTTON_VARIANTS["primary"],
             corner_radius=8, command=self.start_review)
         self.review_btn.pack(side="left", padx=4)
         ctk.CTkButton(br, text="➕ New Card", width=110, height=34, font=FONTS["body"],
@@ -137,7 +137,7 @@ class FlashcardsTab(ctk.CTkFrame):
         ctk.CTkLabel(f, text=f"Reviewed today: {s['cards_reviewed']}", font=FONTS["body"],
             text_color=COLORS["text_secondary"]).pack(pady=(5,20))
         ctk.CTkButton(f, text="Back to Dashboard", width=160, height=38,
-            font=FONTS["body"], fg_color=COLORS["accent"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"],
             command=lambda: self.app.select_tab("Dashboard")).pack(pady=(0,25))
 
     # ── Create Card ───────────────────────────────────────────────
@@ -174,7 +174,7 @@ class FlashcardsTab(ctk.CTkFrame):
         ctk.CTkButton(br, text="💾 Save Card", width=140, height=38, font=FONTS["body_bold"],
             fg_color=COLORS["success"], corner_radius=8, command=self._save_card).pack(side="left", padx=6)
         ctk.CTkButton(br, text="Cancel", width=100, height=38, font=FONTS["body"],
-            fg_color=COLORS["bg_secondary"], corner_radius=8, command=self.start_review).pack(side="left", padx=6)
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], corner_radius=8, command=self.start_review).pack(side="left", padx=6)
 
         self.create_st = ctk.CTkLabel(f, text="", font=FONTS["small"], text_color=COLORS["success"])
         self.create_st.pack(pady=(0,10))

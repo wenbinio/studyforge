@@ -7,7 +7,7 @@ import customtkinter as ctk
 import os
 import sys
 import subprocess
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 from ui.dashboard import DashboardTab
 from ui.pomodoro import PomodoroTab
 from ui.flashcards import FlashcardsTab
@@ -38,12 +38,14 @@ class StudyForgeApp(ctk.CTk):
 
         self.tabs = {}
         self.nav_buttons = {}
+        self.nav_order = []
         self.current_tab = None
         self.focus_mode = False
         self.sidebar = None
 
         self.build_ui()
         self.select_tab("Dashboard")
+        self._bind_keyboard_shortcuts()
 
     def build_ui(self):
         # Main layout: sidebar + content
@@ -87,6 +89,7 @@ class StudyForgeApp(ctk.CTk):
         ]
 
         for icon, label in nav_items:
+            self.nav_order.append(label)
             btn_frame = ctk.CTkFrame(sidebar, fg_color="transparent", corner_radius=8)
             btn_frame.pack(fill="x", padx=8, pady=2)
 
@@ -95,8 +98,9 @@ class StudyForgeApp(ctk.CTk):
             icon_label.pack(side="left", padx=(8, 0))
 
             btn = ctk.CTkButton(btn_frame, text=label, font=FONTS["body"], height=40,
-                fg_color="transparent", hover=False,
+                fg_color=BUTTON_VARIANTS["ghost"]["fg_color"], hover=False,
                 text_color=COLORS["text_secondary"], anchor="w", corner_radius=8,
+                border_width=1, border_color=COLORS["bg_secondary"],
                 command=lambda l=label: self.select_tab(l))
             btn.pack(side="left", fill="x", expand=True)
 
@@ -106,6 +110,8 @@ class StudyForgeApp(ctk.CTk):
             for widget in (btn_frame, icon_label, btn):
                 widget.bind("<Enter>", lambda e, l=label: self._on_nav_enter(l))
                 widget.bind("<Leave>", lambda e, l=label: self._on_nav_leave(l))
+            btn.bind("<FocusIn>", lambda _e, l=label: self._on_nav_focus_in(l))
+            btn.bind("<FocusOut>", lambda _e, l=label: self._on_nav_focus_out(l))
 
         # Bottom section: API status
         spacer = ctk.CTkFrame(sidebar, fg_color="transparent")
@@ -179,6 +185,31 @@ class StudyForgeApp(ctk.CTk):
             widgets["frame"].configure(fg_color="transparent")
             widgets["icon"].configure(text_color=COLORS["text_secondary"])
             widgets["btn"].configure(fg_color="transparent")
+
+    def _on_nav_focus_in(self, label):
+        """Show a visible focus ring for keyboard navigation."""
+        widgets = self.nav_buttons[label]
+        widgets["btn"].configure(border_color=COLORS["accent_light"])
+
+    def _on_nav_focus_out(self, label):
+        """Clear focus ring when nav button loses focus."""
+        widgets = self.nav_buttons[label]
+        widgets["btn"].configure(border_color=COLORS["bg_secondary"])
+
+    def _bind_keyboard_shortcuts(self):
+        """Bind keyboard shortcuts for faster tab navigation."""
+        for index, label in enumerate(self.nav_order, start=1):
+            self.bind(f"<Alt-Key-{index}>", lambda _e, l=label: self.select_tab(l))
+        self.bind("<Control-Tab>", lambda _e: self._cycle_tab(1))
+        self.bind("<Control-Shift-Tab>", lambda _e: self._cycle_tab(-1))
+
+    def _cycle_tab(self, direction: int):
+        """Move to next/previous sidebar tab."""
+        if self.current_tab not in self.nav_order:
+            return
+        current_index = self.nav_order.index(self.current_tab)
+        next_index = (current_index + direction) % len(self.nav_order)
+        self.select_tab(self.nav_order[next_index])
 
     def select_tab(self, tab_name: str):
         """Switch to the specified tab."""

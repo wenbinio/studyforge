@@ -19,8 +19,8 @@ It is grounded in:
 - [x] Confirm focus mode capability already exists in Notes (supports deep-work UX).
 - [x] Normalize hardcoded per-file hex colors to style tokens (notably in flashcards/quiz/settings/notes/participation).
 - [ ] Standardize button hierarchy (primary/secondary/tertiary/destructive) across all tabs.
-- [ ] Improve keyboard-first navigation consistency (especially tab traversal and explicit focus visibility).
-- [ ] Improve visual contrast of muted text and secondary labels on dark surfaces.
+- [x] Improve keyboard-first navigation consistency (especially tab traversal and explicit focus visibility).
+- [x] Improve visual contrast of muted text and secondary labels on dark surfaces.
 
 ---
 
@@ -48,10 +48,10 @@ It is grounded in:
 - [x] Reserve alternate accent(s) only for mode indicators (e.g., interleaved mode), not general action buttons.
 
 ### B. Contrast/readability guardrails
-- [ ] Ensure body text contrast is comfortably readable on primary and secondary dark surfaces.
-- [ ] Increase contrast for muted metadata labels where currently too dim.
+- [x] Ensure body text contrast is comfortably readable on primary and secondary dark surfaces.
+- [x] Increase contrast for muted metadata labels where currently too dim.
 - [ ] Ensure state colors are not color-only signals (pair with icon/text label).
-- [ ] Ensure focus indicator is always visible against dark backgrounds.
+- [x] Ensure focus indicator is always visible against dark backgrounds.
 
 ### C. Suggested palette direction (starting point, not mandatory)
 - [ ] Keep dark navy/purple base but reduce saturation in large surfaces.

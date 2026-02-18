@@ -6,8 +6,8 @@ COLORS = {
     "accent_hover": "#7f70f0", "accent_alt": "#8b5cf6", "accent_alt_hover": "#7c3aed",
     "accent_light": "#a29bfe", "success": "#00b894", "success_hover": "#00d2a0",
     "warning": "#fdcb6e", "warning_hover": "#f0be50", "danger": "#e17055",
-    "danger_hover": "#c0392b", "text_primary": "#f0f0f5", "text_secondary": "#a0a0c0",
-    "text_muted": "#6c6c8a", "text_on_accent": "#ffffff", "text_on_state": "#1a1a2e",
+    "danger_hover": "#c0392b", "text_primary": "#f0f0f5", "text_secondary": "#b3b3d0",
+    "text_muted": "#8f8fad", "text_on_accent": "#ffffff", "text_on_state": "#1a1a2e",
     "border": "#3a3b5a",
     "timer_work": "#e17055", "timer_break": "#00b894",
     "rating_0": "#d63031", "rating_1": "#e17055", "rating_2": "#fdcb6e",
@@ -24,3 +24,10 @@ FONTS = {
 }
 
 PAD = {"page": 20, "section": 15, "el": 8, "btn": 10}
+
+BUTTON_VARIANTS = {
+    "primary": {"fg_color": COLORS["accent"], "hover_color": COLORS["accent_hover"]},
+    "secondary": {"fg_color": COLORS["bg_secondary"], "hover_color": COLORS["bg_hover"]},
+    "ghost": {"fg_color": "transparent", "hover_color": COLORS["bg_hover"]},
+    "destructive": {"fg_color": COLORS["danger"], "hover_color": COLORS["danger_hover"]},
+}

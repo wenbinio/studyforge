@@ -21,8 +21,8 @@ COLORS = {
     "danger": "#e17055",
     "danger_hover": "#c0392b",
     "text_primary": "#f0f0f5",
-    "text_secondary": "#a0a0c0",
-    "text_muted": "#6c6c8a",
+    "text_secondary": "#b3b3d0",
+    "text_muted": "#8f8fad",
     "text_on_accent": "#ffffff",
     "text_on_state": "#1a1a2e",
     "border": "#3a3b5a",
@@ -56,4 +56,11 @@ PADDING = {
     "section": 15,
     "element": 8,
     "button": 10,
+}
+
+BUTTON_VARIANTS = {
+    "primary": {"fg_color": COLORS["accent"], "hover_color": COLORS["accent_hover"]},
+    "secondary": {"fg_color": COLORS["bg_secondary"], "hover_color": COLORS["bg_hover"]},
+    "ghost": {"fg_color": "transparent", "hover_color": COLORS["bg_hover"]},
+    "destructive": {"fg_color": COLORS["danger"], "hover_color": COLORS["danger_hover"]},
 }
