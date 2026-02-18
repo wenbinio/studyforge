@@ -1,6 +1,6 @@
 #  StudyForge — All-in-One Study Companion
 
-A comprehensive desktop study application combining **Pomodoro Timer**, **Active Recall**, **Spaced Repetition (SM-2)**, **Lecture Notes Management**, and **Claude AI Integration** into a single, polished Windows-native tool.
+A comprehensive AI-first desktop (and hopefully soon, Android) study application combining **Pomodoro Timer**, **Active Recall**, **Spaced Repetition (SM-2)**, **Lecture Notes Management**, and **Claude AI Integration** into a single, polished tool.
 
 ## Download — No Python Required
 
