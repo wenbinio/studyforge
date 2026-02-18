@@ -22,7 +22,7 @@ It currently covers the major module surface (Dashboard, Notes, Flashcards, Quiz
 | Flashcards AI generation from notes | `ui/flashcards.py` `show_ai_generate_dialog()` | `features/flashcards/flashcards_page.dart` AI generation from selected note using provider settings | ✅ Implemented |
 | Quiz single + interleaved | `ui/quiz.py` supports single and interleaved multi-note quiz generation | `features/quiz/quiz_page.dart` now supports single-note selection and interleaved multi-note selection; still lacks desktop-style per-topic quiz-result breakdown UI | ⚠️ Partial |
 | Essay rubric workflow | `ui/essays.py` includes rubric upload/management (`extract_rubric_text`, rubric selection) | `features/essays/essays_page.dart` supports creating/selecting stored rubrics and rubric-aware grading prompt; file upload/import still missing | ⚠️ Partial |
-| Settings connection test UX | Desktop settings has `_test_connection()` action and live status | Flutter settings saves config but no explicit connection test button | ⚠️ Partial |
+| Settings connection test UX | Desktop settings has `_test_connection()` action and live status | `features/settings/settings_page.dart` now includes explicit Test Connection action and live status text | ✅ Implemented |
 
 ## What is already strong in Flutter
 
@@ -49,4 +49,4 @@ But `flutter` is not installed in the sandbox (`bash: flutter: command not found
 1. **Notes power features**: import (`pdf/docx`), export, find/replace, preview/navigator/focus-mode.
 2. **Quiz result parity polish**: desktop-style per-topic result breakdown for interleaved quizzes.
 3. **Essay rubric import parity**: file upload/import for rubric content (`txt/md/pdf/docx`) and richer rubric management UI.
-4. **Settings test-connection UX**: explicit key/model/provider test action.
+4. **Settings polish**: provider/model option UX parity (desktop has richer provider/model guidance and quick hints).
