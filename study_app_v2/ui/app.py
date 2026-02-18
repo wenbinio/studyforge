@@ -130,6 +130,12 @@ class StudyForgeApp(ctk.CTk):
             text_color=COLORS["text_muted"])
         self.api_hint.pack(padx=12, pady=(0, 14), anchor="w")
 
+        self.shortcuts_hint = ctk.CTkLabel(
+            sidebar, text="⌨ Alt+1..9 • Ctrl+Tab",
+            font=("Segoe UI", 9), text_color=COLORS["text_muted"]
+        )
+        self.shortcuts_hint.pack(padx=12, pady=(0, 10), anchor="w")
+
         # ── Content Area ──────────────────────────────────────────
         self.content_area = ctk.CTkFrame(self, fg_color=COLORS["bg_primary"], corner_radius=0)
         self.content_area.grid(row=0, column=1, sticky="nsew")

@@ -30,7 +30,7 @@ It is grounded in:
 - [ ] Reduce cognitive overhead: fewer competing accent colors and fewer one-off button styles.
 - [ ] Make progress legible at a glance: due count, streak trend, today’s completion, next best action.
 - [ ] Keep AI actions explicit and safe: clear loading/error/success states; no ambiguous “silent failure.”
-- [ ] Preserve “power-user speed” via keyboard shortcuts while improving discoverability for new users.
+- [x] Preserve “power-user speed” via keyboard shortcuts while improving discoverability for new users.
 
 ---
 
@@ -86,7 +86,7 @@ It is grounded in:
   - [ ] Settings
 - [ ] Add optional compact/collapsed sidebar behavior for smaller laptop screens.
 - [ ] Strengthen active-state indication (background + text/icon + optional left rail marker).
-- [ ] Ensure hover, active, and keyboard-focus states are all distinct.
+- [x] Ensure hover, active, and keyboard-focus states are all distinct.
 - [ ] Add contextual header action per tab: “primary next action” visible immediately.
 
 ---
