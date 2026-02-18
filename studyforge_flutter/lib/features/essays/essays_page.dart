@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/essay_grading.dart';
 import '../../core/models.dart';
+import '../../core/rubric_import.dart';
 
 class EssaysPage extends StatefulWidget {
   const EssaysPage({super.key, required this.controller});
@@ -18,6 +19,7 @@ class _EssaysPageState extends State<EssaysPage> {
   final draftController = TextEditingController();
   final rubricNameController = TextEditingController();
   final rubricContentController = TextEditingController();
+  final rubricPathController = TextEditingController();
   List<Rubric> rubrics = [];
   int? selectedRubricId;
   String feedback = '';
@@ -35,6 +37,7 @@ class _EssaysPageState extends State<EssaysPage> {
     draftController.dispose();
     rubricNameController.dispose();
     rubricContentController.dispose();
+    rubricPathController.dispose();
     super.dispose();
   }
 
@@ -75,6 +78,36 @@ class _EssaysPageState extends State<EssaysPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Rubric saved.')),
     );
+  }
+
+  Future<void> _importRubricFromPath() async {
+    try {
+      final (name, content) = await loadRubricFromPath(rubricPathController.text);
+      await widget.controller.database.addRubric(
+        Rubric(
+          id: null,
+          name: name,
+          content: content,
+          sourceFile: rubricPathController.text.trim(),
+          createdAt: DateTime.now(),
+        ),
+      );
+      rubricPathController.clear();
+      await _loadRubrics();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Imported rubric '$name'.")),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Rubric import failed: $e')),
+      );
+    }
   }
 
   Future<void> _gradeEssay() async {
@@ -169,6 +202,13 @@ class _EssaysPageState extends State<EssaysPage> {
             ),
           ),
           const SizedBox(height: 8),
+          TextField(
+            controller: rubricPathController,
+            decoration: const InputDecoration(
+              labelText: 'Import rubric from path (.txt/.md)',
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
             children: [
               FilledButton.icon(
@@ -181,6 +221,12 @@ class _EssaysPageState extends State<EssaysPage> {
                 onPressed: _loadRubrics,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Refresh Rubrics'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _importRubricFromPath,
+                icon: const Icon(Icons.file_open),
+                label: const Text('Import Path'),
               ),
             ],
           ),

@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'database_validators.dart';
 import 'models.dart';
 
 class DatabaseService {
@@ -186,14 +187,7 @@ CREATE TABLE participation_questions (
   }
 
   Future<void> incrementDailyStat(String field, int amount) async {
-    const valid = {
-      'cards_reviewed',
-      'cards_added',
-      'pomodoro_sessions',
-      'study_minutes',
-      'quiz_questions_answered'
-    };
-    if (!valid.contains(field)) {
+    if (!isValidDailyStatField(field)) {
       throw Exception('Invalid stat field: $field');
     }
 

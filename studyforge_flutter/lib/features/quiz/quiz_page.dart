@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/models.dart';
 import '../../core/quiz_generation.dart';
+import '../../core/quiz_results.dart';
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key, required this.controller});
@@ -21,6 +22,7 @@ class _QuizPageState extends State<QuizPage> {
   final Set<int> selectedNoteIds = <int>{};
   String output = '';
   bool loading = false;
+  Map<String, int> topicBreakdown = const {};
 
   @override
   void initState() {
@@ -108,6 +110,12 @@ class _QuizPageState extends State<QuizPage> {
       }
       setState(() {
         output = result;
+        topicBreakdown = interleavedMode
+            ? buildInterleavedTopicBreakdown(
+                quizOutput: result,
+                selectedNotes: pickedNotes,
+              )
+            : const {};
       });
     } catch (e) {
       if (!mounted) {
@@ -215,10 +223,26 @@ class _QuizPageState extends State<QuizPage> {
           const SizedBox(height: 12),
           Expanded(
             child: SingleChildScrollView(
-              child: SelectableText(
-                output.isEmpty
-                    ? 'Generated quiz output appears here. Configure API key in Settings first.'
-                    : output,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SelectableText(
+                    output.isEmpty
+                        ? 'Generated quiz output appears here. Configure API key in Settings first.'
+                        : output,
+                  ),
+                  if (interleavedMode && output.isNotEmpty && topicBreakdown.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Interleaved topic breakdown',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 6),
+                    ...topicBreakdown.entries.map((entry) => Text(
+                          '• ${entry.key}: ${entry.value} mention${entry.value == 1 ? '' : 's'}',
+                        )),
+                  ],
+                ],
               ),
             ),
           ),

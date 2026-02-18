@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_controller.dart';
 import '../../core/models.dart';
 import '../../core/settings_connection.dart';
+import '../../core/settings_hints.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
@@ -178,6 +179,22 @@ class _SettingsPageState extends State<SettingsPage> {
         TextField(
           controller: modelController,
           decoration: const InputDecoration(labelText: 'Model'),
+        ),
+        const SizedBox(height: 8),
+        Text(providerHint(provider)),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () {
+            final model = recommendedModel(provider);
+            if (model.isEmpty) {
+              return;
+            }
+            setState(() {
+              modelController.text = model;
+            });
+          },
+          icon: const Icon(Icons.tips_and_updates),
+          label: const Text('Use recommended model'),
         ),
         const SizedBox(height: 8),
         FilledButton.icon(
