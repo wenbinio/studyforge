@@ -3,7 +3,7 @@
 import customtkinter as ctk
 from datetime import datetime
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 
 
@@ -55,16 +55,16 @@ class PomodoroTab(ctk.CTkFrame):
         bf.pack(pady=10)
 
         self.start_btn = ctk.CTkButton(bf, text="▶  Start", width=130, height=45,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=10, command=self.toggle)
+            font=FONTS["body_bold"], corner_radius=10, command=self.toggle,
+            **BUTTON_VARIANTS["primary"])
         self.start_btn.pack(side="left", padx=6)
 
         ctk.CTkButton(bf, text="⏭  Skip", width=130, height=45, font=FONTS["body_bold"],
-            fg_color=COLORS["bg_card"], hover_color=COLORS["bg_secondary"],
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], hover_color=BUTTON_VARIANTS["secondary"]["hover_color"],
             corner_radius=10, command=self.skip).pack(side="left", padx=6)
 
         ctk.CTkButton(bf, text="↺  Reset", width=130, height=45, font=FONTS["body_bold"],
-            fg_color=COLORS["bg_card"], hover_color=COLORS["bg_secondary"],
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], hover_color=BUTTON_VARIANTS["secondary"]["hover_color"],
             corner_radius=10, command=self.reset).pack(side="left", padx=6)
 
         # Settings row

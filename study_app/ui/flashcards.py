@@ -6,7 +6,7 @@ Supports manual creation, AI generation, and SM-2 spaced repetition review.
 import customtkinter as ctk
 import threading
 import random
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 from srs_engine import review_card, get_rating_labels
 
@@ -38,16 +38,16 @@ class FlashcardsTab(ctk.CTkFrame):
 
         self.review_btn = ctk.CTkButton(
             btn_row, text="📖 Review Due", width=120, height=34,
-            font=FONTS["body"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=8,
+            font=FONTS["body"], corner_radius=8,
+            **BUTTON_VARIANTS["primary"],
             command=self.start_review
         )
         self.review_btn.pack(side="left", padx=4)
 
         self.interleave_btn = ctk.CTkButton(
             btn_row, text="🔀 Interleaved", width=120, height=34,
-            font=FONTS["body"], fg_color="#8b5cf6",
-            hover_color="#7c3aed", corner_radius=8,
+            font=FONTS["body"], fg_color=COLORS["accent_alt"],
+            hover_color=COLORS["accent_alt_hover"], corner_radius=8,
             command=self.start_interleaved_review
         )
         self.interleave_btn.pack(side="left", padx=4)
@@ -55,21 +55,21 @@ class FlashcardsTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="➕ New Card", width=110, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.show_create_dialog
         ).pack(side="left", padx=4)
 
         ctk.CTkButton(
             btn_row, text="🤖 AI Generate", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["warning"],
-            hover_color="#f0be50", corner_radius=8,
+            hover_color=COLORS["warning_hover"], corner_radius=8,
             command=self.show_ai_generate_dialog
         ).pack(side="left", padx=4)
 
         ctk.CTkButton(
             btn_row, text="📋 Browse All", width=110, height=34,
             font=FONTS["body"], fg_color=COLORS["bg_card"],
-            hover_color=COLORS["bg_secondary"], corner_radius=8,
+            hover_color=BUTTON_VARIANTS["secondary"]["hover_color"], corner_radius=8,
             command=self.show_browse_mode
         ).pack(side="left", padx=4)
 
@@ -102,7 +102,7 @@ class FlashcardsTab(ctk.CTkFrame):
         due_count = len(self.current_cards)
         self.status_label.configure(text=f"📋 {due_count} card{'s' if due_count != 1 else ''} due for review")
         self.review_btn.configure(fg_color=COLORS["accent"])
-        self.interleave_btn.configure(fg_color="#8b5cf6")
+        self.interleave_btn.configure(fg_color=COLORS["accent_alt"])
 
         if due_count == 0:
             self._show_empty_state()
@@ -127,7 +127,7 @@ class FlashcardsTab(ctk.CTkFrame):
             text=f"🔀 Interleaved: {due_count} card{'s' if due_count != 1 else ''} across {topic_count} topic{'s' if topic_count != 1 else ''}"
         )
         self.interleave_btn.configure(fg_color=COLORS["accent"])
-        self.review_btn.configure(fg_color="#8b5cf6")
+        self.review_btn.configure(fg_color=COLORS["accent_alt"])
 
         if due_count == 0:
             self._show_empty_state()
@@ -160,14 +160,14 @@ class FlashcardsTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="Review Shuffled Anyway", width=180, height=38,
-            font=FONTS["body_bold"], fg_color="#8b5cf6",
-            hover_color="#7c3aed", corner_radius=8,
+            font=FONTS["body_bold"], fg_color=COLORS["accent_alt"],
+            hover_color=COLORS["accent_alt_hover"], corner_radius=8,
             command=self._show_card
         ).pack(side="left", padx=6)
 
         ctk.CTkButton(
             btn_row, text="Normal Review", width=140, height=38,
-            font=FONTS["body"], fg_color=COLORS["bg_secondary"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
             corner_radius=8, command=self.start_review
         ).pack(side="left", padx=6)
 
@@ -221,11 +221,11 @@ class FlashcardsTab(ctk.CTkFrame):
 
         # Topic badge for interleaved mode
         if self.is_interleaved and card.get("note_title"):
-            topic_badge = ctk.CTkFrame(card_frame, fg_color="#8b5cf6", corner_radius=6)
+            topic_badge = ctk.CTkFrame(card_frame, fg_color=COLORS["accent_alt"], corner_radius=6)
             topic_badge.pack(pady=(15, 0))
             ctk.CTkLabel(
                 topic_badge, text=f"  📂 {card['note_title'][:45]}  ",
-                font=("Segoe UI", 11, "bold"), text_color="#ffffff"
+                font=("Segoe UI", 11, "bold"), text_color=COLORS["text_on_accent"]
             ).pack(padx=2, pady=2)
 
         # Front (question)
@@ -279,7 +279,7 @@ class FlashcardsTab(ctk.CTkFrame):
                     width=75, height=55, font=FONTS["small"],
                     fg_color=rating_colors[rating_val],
                     hover_color=COLORS["accent_hover"],
-                    text_color="#1a1a2e",
+                    text_color=COLORS["text_on_state"],
                     corner_radius=8,
                     command=lambda r=rating_val: self._rate_card(r)
                 )
@@ -289,7 +289,7 @@ class FlashcardsTab(ctk.CTkFrame):
             ctk.CTkButton(
                 card_frame, text="Show Answer",
                 width=200, height=45, font=FONTS["body_bold"],
-                fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
                 corner_radius=10,
                 command=self._reveal_answer
             ).pack(pady=(10, 25))
@@ -337,7 +337,7 @@ class FlashcardsTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             frame, text="Back to Dashboard", width=160, height=38,
-            font=FONTS["body"], fg_color=COLORS["accent"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"],
             command=lambda: self.app.select_tab("Dashboard")
         ).pack(pady=(0, 25))
 
@@ -389,8 +389,8 @@ class FlashcardsTab(ctk.CTkFrame):
 
             ctk.CTkButton(
                 card_frame, text="🗑️", width=36, height=36,
-                font=FONTS["small"], fg_color=COLORS["danger"],
-                hover_color="#c0392b", corner_radius=6,
+                font=FONTS["small"], corner_radius=6,
+                **BUTTON_VARIANTS["destructive"],
                 command=lambda cid=card["id"]: self._delete_card_from_browse(cid)
             ).pack(side="right", padx=8, pady=8)
 
@@ -449,7 +449,7 @@ class FlashcardsTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="Cancel", width=100, height=38,
-            font=FONTS["body"], fg_color=COLORS["bg_secondary"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
             corner_radius=8, command=self.start_review
         ).pack(side="left", padx=6)
 
@@ -538,8 +538,8 @@ class FlashcardsTab(ctk.CTkFrame):
         # Generate button
         self.gen_btn = ctk.CTkButton(
             frame, text="⚡ Generate Flashcards", width=200, height=42,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=10,
+            font=FONTS["body_bold"], corner_radius=10,
+            **BUTTON_VARIANTS["primary"],
             command=self._do_ai_generate
         )
         self.gen_btn.pack(pady=15)

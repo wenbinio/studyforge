@@ -7,7 +7,7 @@ document export, find & replace, table insertion, and document stats.
 import customtkinter as ctk
 import threading, os, re
 from tkinter import filedialog
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 
 
@@ -54,13 +54,13 @@ class NotesTab(ctk.CTkFrame):
         self.focus_btn.pack(side="left", padx=4)
 
         ctk.CTkButton(br, text="➕ New Note", width=120, height=34, font=FONTS["body"],
-            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            fg_color=COLORS["success"], hover_color=COLORS["success_hover"], corner_radius=8,
             command=self._new_note).pack(side="left", padx=4)
         ctk.CTkButton(br, text="📂 Import File", width=120, height=34, font=FONTS["body"],
             fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"], corner_radius=8,
             command=self.import_file).pack(side="left", padx=4)
         ctk.CTkButton(br, text="📋 Paste Note", width=120, height=34, font=FONTS["body"],
-            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            fg_color=COLORS["success"], hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.paste_dlg).pack(side="left", padx=4)
         self.export_btn = ctk.CTkButton(br, text="📤 Export", width=100, height=34,
             font=FONTS["body"], fg_color=COLORS["bg_card"], hover_color=COLORS["accent_hover"],
@@ -139,7 +139,7 @@ class NotesTab(ctk.CTkFrame):
             fg_color=COLORS["success"], corner_radius=6,
             command=lambda: self._save(nid)).pack(side="left", padx=2)
         ctk.CTkButton(tb, text="🗑️", width=36, height=32, font=FONTS["small"],
-            fg_color=COLORS["danger"], corner_radius=6,
+            fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=6,
             command=lambda: self._del(nid)).pack(side="left", padx=2)
 
         self.preview_btn = ctk.CTkButton(tb, text="👁️", width=36, height=32,
@@ -187,7 +187,7 @@ class NotesTab(ctk.CTkFrame):
             fg_color=COLORS["warning"], corner_radius=6,
             command=lambda: self._gen_cards(note)).pack(side="left", padx=2)
         ctk.CTkButton(ar, text="📋 Summarize", width=110, height=30, font=FONTS["small"],
-            fg_color=COLORS["accent"], corner_radius=6,
+            fg_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=6,
             command=lambda: self._summarize(note)).pack(side="left", padx=2)
         ctk.CTkButton(ar, text="❓ Ask Question", width=120, height=30, font=FONTS["small"],
             fg_color=COLORS["accent_light"], corner_radius=6,
@@ -496,7 +496,7 @@ class NotesTab(ctk.CTkFrame):
         ctk.CTkButton(br, text="Replace", width=80, height=30, font=FONTS["small"],
             fg_color=COLORS["warning"], corner_radius=6, command=replace_one).pack(side="left", padx=3)
         ctk.CTkButton(br, text="Replace All", width=90, height=30, font=FONTS["small"],
-            fg_color=COLORS["danger"], corner_radius=6, command=replace_all).pack(side="left", padx=3)
+            fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=6, command=replace_all).pack(side="left", padx=3)
 
     # ── Export ────────────────────────────────────────────────────
 

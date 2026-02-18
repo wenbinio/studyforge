@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 
 
@@ -47,11 +47,11 @@ class ParticipationTab(ctk.CTkFrame):
         bf = ctk.CTkFrame(gen_card, fg_color="transparent")
         bf.pack(pady=(5, 4))
         self.gen_btn = ctk.CTkButton(bf, text="⚡ Generate Questions", width=200, height=40,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body_bold"], **BUTTON_VARIANTS["primary"],
             corner_radius=10, command=self.gen_questions)
         self.gen_btn.pack(side="left", padx=4)
         ctk.CTkButton(bf, text="✏️ Add Manual Question", width=180, height=40,
-            font=FONTS["body_bold"], fg_color=COLORS["success"], hover_color="#00d2a0",
+            font=FONTS["body_bold"], fg_color=COLORS["success"], hover_color=COLORS["success_hover"],
             corner_radius=10, command=self._add_manual).pack(side="left", padx=4)
 
         self.status = ctk.CTkLabel(gen_card, text="", font=FONTS["small"],
@@ -71,8 +71,8 @@ class ParticipationTab(ctk.CTkFrame):
         ]
         for cat_id, cat_label in categories:
             btn = ctk.CTkButton(filter_f, text=cat_label, width=120, height=32,
-                font=FONTS["body"], fg_color=COLORS["accent"] if cat_id == "all" else COLORS["bg_secondary"],
-                hover_color=COLORS["accent_hover"], corner_radius=8,
+                font=FONTS["body"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"] if cat_id == "all" else BUTTON_VARIANTS["secondary"]["fg_color"],
+                hover_color=BUTTON_VARIANTS["primary"]["hover_color"], corner_radius=8,
                 text_color=COLORS["text_primary"],
                 command=lambda c=cat_id: self._filter(c))
             btn.pack(side="left", padx=3)
@@ -88,9 +88,9 @@ class ParticipationTab(ctk.CTkFrame):
         self.current_category = category
         for cat_id, btn in self.filter_btns.items():
             if cat_id == category:
-                btn.configure(fg_color=COLORS["accent"])
+                btn.configure(fg_color=BUTTON_VARIANTS["primary"]["fg_color"])
             else:
-                btn.configure(fg_color=COLORS["bg_secondary"])
+                btn.configure(fg_color=BUTTON_VARIANTS["secondary"]["fg_color"])
         self._show_questions()
 
     def gen_questions(self):
@@ -235,10 +235,10 @@ class ParticipationTab(ctk.CTkFrame):
             btn_f.pack(padx=12, pady=(4, 8), anchor="w")
 
             ctk.CTkButton(btn_f, text="💬 Answer", width=80, height=26, font=FONTS["small"],
-                fg_color=COLORS["accent"], corner_radius=6,
+                fg_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=6,
                 command=lambda qid=q["id"]: self._answer_question(qid)).pack(side="left", padx=2)
             ctk.CTkButton(btn_f, text="🗑️", width=36, height=26, font=FONTS["small"],
-                fg_color=COLORS["danger"], corner_radius=6,
+                fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=6,
                 command=lambda qid=q["id"]: self._delete_question(qid)).pack(side="left", padx=2)
 
     def _answer_question(self, qid):

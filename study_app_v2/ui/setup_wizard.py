@@ -5,7 +5,7 @@ Shown only once. User can skip and configure later in Settings.
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import config_manager as cfg
 from claude_client import (
     ClaudeStudyClient,
@@ -105,14 +105,14 @@ class SetupWizard(ctk.CTkFrame):
 
         ctk.CTkButton(
             key_row, text="👁", width=36, height=38, font=FONTS["body"],
-            fg_color=COLORS["bg_secondary"], hover_color=COLORS["accent"],
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["fg_color"],
             corner_radius=6, command=self._toggle_vis
         ).pack(side="left", padx=(0, 6))
 
         self.test_btn = ctk.CTkButton(
             key_row, text="Test", width=70, height=38,
-            font=FONTS["body"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=8,
+            font=FONTS["body"], corner_radius=8,
+            **BUTTON_VARIANTS["primary"],
             command=self._test_key
         )
         self.test_btn.pack(side="left")
@@ -129,15 +129,15 @@ class SetupWizard(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="🚀 Get Started", width=200, height=48,
-            font=("Segoe UI", 15, "bold"), fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=12,
+            font=("Segoe UI", 15, "bold"), corner_radius=12,
+            **BUTTON_VARIANTS["primary"],
             command=self._finish
         ).pack(side="left", padx=8)
 
         ctk.CTkButton(
             btn_row, text="Skip for now", width=130, height=48,
-            font=FONTS["body"], fg_color=COLORS["bg_card"],
-            hover_color=COLORS["bg_secondary"], corner_radius=12,
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
+            hover_color=BUTTON_VARIANTS["secondary"]["hover_color"], corner_radius=12,
             command=self._skip
         ).pack(side="left", padx=8)
 

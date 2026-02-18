@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 import config_manager as cfg
 
@@ -124,7 +124,7 @@ class HypotheticalsTab(ctk.CTkFrame):
         bf = ctk.CTkFrame(gen_card, fg_color="transparent")
         bf.pack(pady=(5, PAD["section"]))
         self.gen_btn = ctk.CTkButton(bf, text="⚡ Generate Hypothetical", width=200, height=40,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body_bold"], **BUTTON_VARIANTS["primary"],
             corner_radius=10, command=self.gen_hypothetical)
         self.gen_btn.pack()
 
@@ -264,12 +264,12 @@ class HypotheticalsTab(ctk.CTkFrame):
         top_bar = ctk.CTkFrame(scroll, fg_color="transparent")
         top_bar.pack(fill="x", pady=(0, 8))
         ctk.CTkButton(top_bar, text="← Back to List", width=120, height=30, font=FONTS["small"],
-            fg_color=COLORS["bg_secondary"], corner_radius=6,
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], corner_radius=6,
             command=self._show_history).pack(side="left")
         self.layout_btn = ctk.CTkButton(top_bar, text="◫ Side-by-Side" if not self.side_by_side else "▤ Stacked",
             width=130, height=30, font=FONTS["small"],
-            fg_color=COLORS["accent"] if self.side_by_side else COLORS["bg_secondary"],
-            hover_color=COLORS["accent_hover"], corner_radius=6,
+            fg_color=BUTTON_VARIANTS["primary"]["fg_color"] if self.side_by_side else BUTTON_VARIANTS["secondary"]["fg_color"],
+            hover_color=BUTTON_VARIANTS["primary"]["hover_color"], corner_radius=6,
             command=lambda: self._toggle_layout(hid))
         self.layout_btn.pack(side="right")
 
@@ -314,11 +314,11 @@ class HypotheticalsTab(ctk.CTkFrame):
                 fg_color=COLORS["success"], corner_radius=8,
                 command=lambda: self._save_response(hid)).pack(side="left", padx=4)
             self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade", width=100, height=36,
-                font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
                 corner_radius=8, command=lambda: self._grade(hid))
             self.grade_btn.pack(side="left", padx=4)
             ctk.CTkButton(btn_f, text="🗑️", width=50, height=36, font=FONTS["body"],
-                fg_color=COLORS["danger"], corner_radius=8,
+                fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=8,
                 command=lambda: self._delete(hid)).pack(side="left", padx=4)
         else:
             # ── Stacked layout (original) ─────────────────────────
@@ -352,11 +352,11 @@ class HypotheticalsTab(ctk.CTkFrame):
                 fg_color=COLORS["success"], corner_radius=8,
                 command=lambda: self._save_response(hid)).pack(side="left", padx=4)
             self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade My Analysis", width=170, height=36,
-                font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
                 corner_radius=8, command=lambda: self._grade(hid))
             self.grade_btn.pack(side="left", padx=4)
             ctk.CTkButton(btn_f, text="🗑️ Delete", width=80, height=36, font=FONTS["body"],
-                fg_color=COLORS["danger"], corner_radius=8,
+                fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=8,
                 command=lambda: self._delete(hid)).pack(side="left", padx=4)
 
         self.feedback_f = ctk.CTkFrame(scroll, fg_color="transparent")

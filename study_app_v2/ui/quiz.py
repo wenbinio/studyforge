@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 
 
@@ -51,7 +51,7 @@ class QuizTab(ctk.CTkFrame):
         bf = ctk.CTkFrame(self.setup, fg_color="transparent")
         bf.pack(pady=(5, PAD["section"]))
         self.gen_btn = ctk.CTkButton(bf, text="⚡ Generate Quiz", width=180, height=40,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body_bold"], **BUTTON_VARIANTS["primary"],
             corner_radius=10, command=self.gen_quiz)
         self.gen_btn.pack()
 
@@ -117,7 +117,7 @@ class QuizTab(ctk.CTkFrame):
         correct = q.get("correct", 0)
         for i, opt in enumerate(q.get("options", [])):
             b = ctk.CTkButton(card, text=opt, anchor="w", font=FONTS["body"], height=44,
-                fg_color=COLORS["bg_secondary"], hover_color=COLORS["accent"],
+                fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["fg_color"],
                 text_color=COLORS["text_primary"], corner_radius=8,
                 command=lambda idx=i: self._answer(idx, correct, q))
             b.pack(fill="x", padx=24, pady=3)
@@ -126,7 +126,7 @@ class QuizTab(ctk.CTkFrame):
         self.expl = ctk.CTkLabel(card, text="", font=FONTS["body"],
             text_color=COLORS["text_secondary"], wraplength=600, justify="left")
         self.nxt_btn = ctk.CTkButton(card, text="Next →", width=120, height=38,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], corner_radius=8,
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=8,
             command=self._next)
 
     def _answer(self, sel, correct, q):
@@ -168,9 +168,9 @@ class QuizTab(ctk.CTkFrame):
         br = ctk.CTkFrame(card, fg_color="transparent")
         br.pack(pady=(5,25))
         ctk.CTkButton(br, text="🔄 Try Again", width=130, height=38, font=FONTS["body"],
-            fg_color=COLORS["accent"], corner_radius=8, command=self.gen_quiz).pack(side="left", padx=6)
+            fg_color=BUTTON_VARIANTS["primary"]["fg_color"], corner_radius=8, command=self.gen_quiz).pack(side="left", padx=6)
         ctk.CTkButton(br, text="🏠 Dashboard", width=130, height=38, font=FONTS["body"],
-            fg_color=COLORS["bg_secondary"], corner_radius=8,
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], corner_radius=8,
             command=lambda: self.app.select_tab("Dashboard")).pack(side="left", padx=6)
 
     def refresh_notes(self):

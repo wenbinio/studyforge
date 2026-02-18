@@ -7,7 +7,7 @@ import customtkinter as ctk
 from datetime import datetime
 import threading
 import platform
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 
 # winsound is Windows-only; graceful fallback on other platforms
@@ -89,24 +89,24 @@ class PomodoroTab(ctk.CTkFrame):
 
         self.start_btn = ctk.CTkButton(
             btn_frame, text="▶  Start", width=130, height=45,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=10,
+            font=FONTS["body_bold"], corner_radius=10,
+            **BUTTON_VARIANTS["primary"],
             command=self.toggle_timer
         )
         self.start_btn.pack(side="left", padx=6)
 
         self.skip_btn = ctk.CTkButton(
             btn_frame, text="⏭  Skip", width=130, height=45,
-            font=FONTS["body_bold"], fg_color=COLORS["bg_card"],
-            hover_color=COLORS["bg_secondary"], corner_radius=10,
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
+            hover_color=BUTTON_VARIANTS["secondary"]["hover_color"], corner_radius=10,
             command=self.skip_session
         )
         self.skip_btn.pack(side="left", padx=6)
 
         self.reset_btn = ctk.CTkButton(
             btn_frame, text="↺  Reset", width=130, height=45,
-            font=FONTS["body_bold"], fg_color=COLORS["bg_card"],
-            hover_color=COLORS["bg_secondary"], corner_radius=10,
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
+            hover_color=BUTTON_VARIANTS["secondary"]["hover_color"], corner_radius=10,
             command=self.reset_timer
         )
         self.reset_btn.pack(side="left", padx=6)

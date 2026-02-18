@@ -5,7 +5,7 @@ Shows daily stats, streak, due cards, and review forecast.
 
 import customtkinter as ctk
 from datetime import date
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 
 
@@ -106,8 +106,8 @@ class DashboardTab(ctk.CTkFrame):
         for text, cmd, color, enabled in actions:
             btn = ctk.CTkButton(
                 self.actions_frame, text=text, command=cmd,
-                fg_color=color if enabled else COLORS["bg_secondary"],
-                hover_color=COLORS["accent_hover"],
+                fg_color=color if enabled else BUTTON_VARIANTS["secondary"]["fg_color"],
+                hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
                 font=FONTS["body_bold"], height=42, anchor="w",
                 corner_radius=8
             )

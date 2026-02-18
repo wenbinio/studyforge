@@ -10,7 +10,7 @@ import threading
 import os
 import re
 from tkinter import filedialog
-from ui.styles import COLORS, FONTS, PADDING
+from ui.styles import COLORS, FONTS, PADDING, BUTTON_VARIANTS
 import database as db
 
 
@@ -80,7 +80,7 @@ class NotesTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="➕ New Note", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self._new_note
         ).pack(side="left", padx=4)
 
@@ -94,7 +94,7 @@ class NotesTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="📋 Paste Note", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.show_paste_dialog
         ).pack(side="left", padx=4)
 
@@ -234,7 +234,7 @@ class NotesTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             title_bar, text="🗑️", width=36, height=32,
-            font=FONTS["small"], fg_color=COLORS["danger"],
+            font=FONTS["small"], fg_color=BUTTON_VARIANTS["destructive"]["fg_color"],
             corner_radius=6, command=lambda: self._delete_note(note_id)
         ).pack(side="left", padx=2)
 
@@ -308,7 +308,7 @@ class NotesTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             action_row, text="📋 Summarize", width=110, height=30,
-            font=FONTS["small"], fg_color=COLORS["accent"],
+            font=FONTS["small"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"],
             corner_radius=6, command=lambda: self._summarize_note(note)
         ).pack(side="left", padx=2)
 
@@ -726,7 +726,7 @@ class NotesTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="Replace All", width=90, height=30, font=FONTS["small"],
-            fg_color=COLORS["danger"], corner_radius=6, command=replace_all
+            fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=6, command=replace_all
         ).pack(side="left", padx=3)
 
     # ── Export ────────────────────────────────────────────────────
@@ -1035,13 +1035,13 @@ class NotesTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="🗑️ Delete", width=100, height=34,
-            font=FONTS["body_bold"], fg_color=COLORS["danger"],
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["destructive"]["fg_color"],
             corner_radius=8, command=confirm
         ).pack(side="left", padx=6)
 
         ctk.CTkButton(
             btn_row, text="Cancel", width=100, height=34,
-            font=FONTS["body"], fg_color=COLORS["bg_secondary"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["secondary"]["fg_color"],
             corner_radius=8, command=dialog.destroy
         ).pack(side="left", padx=6)
 
