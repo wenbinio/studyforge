@@ -2,7 +2,7 @@
 
 import customtkinter as ctk
 from datetime import date, timedelta
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 
 
@@ -74,7 +74,7 @@ class DashboardTab(ctk.CTkFrame):
         ]
         for text, cmd, color in actions:
             ctk.CTkButton(self.actions_frame, text=text, command=cmd, fg_color=color,
-                hover_color=COLORS["accent_hover"], font=FONTS["body_bold"], height=42,
+                hover_color=BUTTON_VARIANTS["primary"]["hover_color"], font=FONTS["body_bold"], height=42,
                 anchor="w", corner_radius=8).pack(fill="x", padx=PAD["section"], pady=3)
 
         info = f"\n📦 Total cards: {total}"

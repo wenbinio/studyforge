@@ -18,7 +18,7 @@ It is grounded in:
 - [x] Confirm consistent typography baseline (`Segoe UI`, compact study-oriented density).
 - [x] Confirm focus mode capability already exists in Notes (supports deep-work UX).
 - [x] Normalize hardcoded per-file hex colors to style tokens (notably in flashcards/quiz/settings/notes/participation).
-- [ ] Standardize button hierarchy (primary/secondary/tertiary/destructive) across all tabs.
+- [x] Standardize button hierarchy (primary/secondary/tertiary/destructive) across all tabs.
 - [x] Improve keyboard-first navigation consistency (especially tab traversal and explicit focus visibility).
 - [x] Improve visual contrast of muted text and secondary labels on dark surfaces.
 
@@ -94,7 +94,7 @@ It is grounded in:
 ## 6) Component System Checklist
 
 ### Buttons
-- [ ] Define and enforce 4 button variants: primary, secondary, ghost, destructive.
+- [x] Define and enforce 4 button variants: primary, secondary, ghost, destructive.
 - [ ] Use consistent corner radius, padding, icon placement, and disabled styles.
 - [ ] Ensure every critical action has loading and completion feedback.
 
@@ -182,7 +182,7 @@ It is grounded in:
 ## 10) Definition of Done Checklist (for future implementation PRs)
 
 - [x] All hardcoded UI colors replaced by shared tokens or documented exceptions.
-- [ ] All major interactive components use standardized variant system.
+- [x] All major interactive components use standardized variant system.
 - [ ] All tabs pass keyboard navigation and focus visibility spot-check.
 - [ ] Dashboard/Flashcards/Quiz/Notes/Pomodoro/Settings all show consistent action hierarchy.
 - [ ] Muted/secondary text remains readable on dark surfaces.

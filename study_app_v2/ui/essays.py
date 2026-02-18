@@ -4,7 +4,7 @@ import customtkinter as ctk
 import threading
 import os
 from tkinter import filedialog
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import database as db
 import config_manager as cfg
 
@@ -110,7 +110,7 @@ class EssaysTab(ctk.CTkFrame):
         btn_f = ctk.CTkFrame(create_card, fg_color="transparent")
         btn_f.pack(pady=(0, PAD["section"]))
         ctk.CTkButton(btn_f, text="📝 Create Essay", width=150, height=36,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
             corner_radius=8, command=self._create_essay).pack(side="left", padx=4)
 
         self.status = ctk.CTkLabel(create_card, text="", font=FONTS["small"],
@@ -250,7 +250,7 @@ class EssaysTab(ctk.CTkFrame):
 
         # Back button
         ctk.CTkButton(scroll, text="← Back to List", width=120, height=30, font=FONTS["small"],
-            fg_color=COLORS["bg_secondary"], corner_radius=6,
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], corner_radius=6,
             command=self._show_history).pack(anchor="w", pady=(0, 8))
 
         # Prompt card
@@ -301,11 +301,11 @@ class EssaysTab(ctk.CTkFrame):
             fg_color=COLORS["success"], corner_radius=8,
             command=lambda: self._save_essay(eid)).pack(side="left", padx=4)
         self.grade_btn = ctk.CTkButton(btn_f, text="📊 Grade Essay", width=140, height=36,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+            font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
             corner_radius=8, command=lambda: self._grade(eid))
         self.grade_btn.pack(side="left", padx=4)
         ctk.CTkButton(btn_f, text="🗑️ Delete", width=80, height=36, font=FONTS["body"],
-            fg_color=COLORS["danger"], corner_radius=8,
+            fg_color=BUTTON_VARIANTS["destructive"]["fg_color"], corner_radius=8,
             command=lambda: self._delete(eid)).pack(side="left", padx=4)
 
         # Feedback area

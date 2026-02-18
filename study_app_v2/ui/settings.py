@@ -5,7 +5,7 @@ Handles API key entry, connection testing, Pomodoro config, and preferences.
 
 import customtkinter as ctk
 import threading
-from ui.styles import COLORS, FONTS, PAD
+from ui.styles import COLORS, FONTS, PAD, BUTTON_VARIANTS
 import config_manager as cfg
 from claude_client import (
     ClaudeStudyClient,
@@ -62,7 +62,7 @@ class SettingsTab(ctk.CTkFrame):
 
         self.toggle_vis_btn = ctk.CTkButton(
             key_frame, text="👁", width=36, height=32, font=FONTS["body"],
-            fg_color=COLORS["bg_secondary"], hover_color=COLORS["accent"],
+            fg_color=BUTTON_VARIANTS["secondary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["fg_color"],
             corner_radius=6, command=self._toggle_key_visibility
         )
         self.toggle_vis_btn.pack(side="left")
@@ -121,8 +121,8 @@ class SettingsTab(ctk.CTkFrame):
 
         self.test_btn = ctk.CTkButton(
             btn_frame, text="🔌 Test Connection", width=160, height=38,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=8,
+            font=FONTS["body_bold"], corner_radius=8,
+            **BUTTON_VARIANTS["primary"],
             command=self._test_connection
         )
         self.test_btn.pack(side="left", padx=(0, 8))

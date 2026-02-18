@@ -289,7 +289,7 @@ class FlashcardsTab(ctk.CTkFrame):
             ctk.CTkButton(
                 card_frame, text="Show Answer",
                 width=200, height=45, font=FONTS["body_bold"],
-                fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"],
+                fg_color=BUTTON_VARIANTS["primary"]["fg_color"], hover_color=BUTTON_VARIANTS["primary"]["hover_color"],
                 corner_radius=10,
                 command=self._reveal_answer
             ).pack(pady=(10, 25))
@@ -337,7 +337,7 @@ class FlashcardsTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             frame, text="Back to Dashboard", width=160, height=38,
-            font=FONTS["body"], fg_color=COLORS["accent"],
+            font=FONTS["body"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"],
             command=lambda: self.app.select_tab("Dashboard")
         ).pack(pady=(0, 25))
 
@@ -538,8 +538,8 @@ class FlashcardsTab(ctk.CTkFrame):
         # Generate button
         self.gen_btn = ctk.CTkButton(
             frame, text="⚡ Generate Flashcards", width=200, height=42,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=10,
+            font=FONTS["body_bold"], corner_radius=10,
+            **BUTTON_VARIANTS["primary"],
             command=self._do_ai_generate
         )
         self.gen_btn.pack(pady=15)

@@ -110,8 +110,8 @@ class FlashcardsTab(ctk.CTkFrame):
                     command=lambda rv=r: self._rate(rv)).pack(side="left", padx=3)
         else:
             ctk.CTkButton(cf, text="Show Answer", width=200, height=45,
-                font=FONTS["body_bold"], fg_color=COLORS["accent"],
-                hover_color=COLORS["accent_hover"], corner_radius=10,
+                font=FONTS["body_bold"], fg_color=BUTTON_VARIANTS["primary"]["fg_color"],
+                hover_color=BUTTON_VARIANTS["primary"]["hover_color"], corner_radius=10,
                 command=self._reveal).pack(pady=(10,25))
 
     def _reveal(self):
@@ -223,8 +223,8 @@ class FlashcardsTab(ctk.CTkFrame):
             font=FONTS["body"], width=80, corner_radius=8).pack(side="left", padx=8)
 
         self.gen_btn = ctk.CTkButton(f, text="⚡ Generate", width=200, height=42,
-            font=FONTS["body_bold"], fg_color=COLORS["accent"],
-            hover_color=COLORS["accent_hover"], corner_radius=10, command=self._do_gen)
+            font=FONTS["body_bold"], corner_radius=10, command=self._do_gen,
+            **BUTTON_VARIANTS["primary"])
         self.gen_btn.pack(pady=15)
 
         self.gen_st = ctk.CTkLabel(f, text="", font=FONTS["body"], text_color=COLORS["text_secondary"])
