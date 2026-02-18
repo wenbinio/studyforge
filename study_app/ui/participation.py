@@ -51,7 +51,7 @@ class ParticipationTab(ctk.CTkFrame):
             corner_radius=10, command=self.gen_questions)
         self.gen_btn.pack(side="left", padx=4)
         ctk.CTkButton(bf, text="✏️ Add Manual Question", width=180, height=40,
-            font=FONTS["body_bold"], fg_color=COLORS["success"], hover_color="#00d2a0",
+            font=FONTS["body_bold"], fg_color=COLORS["success"], hover_color=COLORS["success_hover"],
             corner_radius=10, command=self._add_manual).pack(side="left", padx=4)
 
         self.status = ctk.CTkLabel(gen_card, text="", font=FONTS["small"],

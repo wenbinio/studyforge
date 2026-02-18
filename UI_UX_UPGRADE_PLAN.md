@@ -17,7 +17,7 @@ It is grounded in:
 - [x] Confirm semantic color intent exists (`success`, `warning`, `danger`, rating colors), even if usage is inconsistent.
 - [x] Confirm consistent typography baseline (`Segoe UI`, compact study-oriented density).
 - [x] Confirm focus mode capability already exists in Notes (supports deep-work UX).
-- [ ] Normalize hardcoded per-file hex colors to style tokens (notably in flashcards/quiz/settings/notes/participation).
+- [x] Normalize hardcoded per-file hex colors to style tokens (notably in flashcards/quiz/settings/notes/participation).
 - [ ] Standardize button hierarchy (primary/secondary/tertiary/destructive) across all tabs.
 - [ ] Improve keyboard-first navigation consistency (especially tab traversal and explicit focus visibility).
 - [ ] Improve visual contrast of muted text and secondary labels on dark surfaces.
@@ -43,9 +43,9 @@ It is grounded in:
   - [ ] `action.primary`, `action.primary_hover`, `action.secondary`, `action.ghost`
   - [ ] `state.success`, `state.warning`, `state.error`, `state.info`
   - [ ] `focus.ring`, `border.default`, `border.strong`
-- [ ] Map all module-level hardcoded colors to tokens.
-- [ ] Keep one primary accent family for global action identity.
-- [ ] Reserve alternate accent(s) only for mode indicators (e.g., interleaved mode), not general action buttons.
+- [x] Map all module-level hardcoded colors to tokens.
+- [x] Keep one primary accent family for global action identity.
+- [x] Reserve alternate accent(s) only for mode indicators (e.g., interleaved mode), not general action buttons.
 
 ### B. Contrast/readability guardrails
 - [ ] Ensure body text contrast is comfortably readable on primary and secondary dark surfaces.
@@ -181,11 +181,10 @@ It is grounded in:
 
 ## 10) Definition of Done Checklist (for future implementation PRs)
 
-- [ ] All hardcoded UI colors replaced by shared tokens or documented exceptions.
+- [x] All hardcoded UI colors replaced by shared tokens or documented exceptions.
 - [ ] All major interactive components use standardized variant system.
 - [ ] All tabs pass keyboard navigation and focus visibility spot-check.
 - [ ] Dashboard/Flashcards/Quiz/Notes/Pomodoro/Settings all show consistent action hierarchy.
 - [ ] Muted/secondary text remains readable on dark surfaces.
 - [ ] Empty/loading/error/success states are present for major user flows.
 - [ ] No regressions in existing behavior while applying visual/interaction updates.
-

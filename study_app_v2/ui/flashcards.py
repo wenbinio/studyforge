@@ -29,10 +29,10 @@ class FlashcardsTab(ctk.CTkFrame):
             corner_radius=8, command=self.start_review)
         self.review_btn.pack(side="left", padx=4)
         ctk.CTkButton(br, text="➕ New Card", width=110, height=34, font=FONTS["body"],
-            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            fg_color=COLORS["success"], hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.show_create).pack(side="left", padx=4)
         ctk.CTkButton(br, text="🤖 AI Generate", width=120, height=34, font=FONTS["body"],
-            fg_color=COLORS["warning"], hover_color="#f0be50", corner_radius=8,
+            fg_color=COLORS["warning"], hover_color=COLORS["warning_hover"], corner_radius=8,
             command=self.show_ai_gen).pack(side="left", padx=4)
 
         self.status = ctk.CTkLabel(self, text="", font=FONTS["body"], text_color=COLORS["text_secondary"])
@@ -106,7 +106,7 @@ class FlashcardsTab(ctk.CTkFrame):
             for r in range(6):
                 ctk.CTkButton(rf, text=f"{r}\n{labels[r][0]}", width=75, height=55,
                     font=FONTS["small"], fg_color=colors[r], hover_color=COLORS["accent_hover"],
-                    text_color="#1a1a2e", corner_radius=8,
+                    text_color=COLORS["text_on_state"], corner_radius=8,
                     command=lambda rv=r: self._rate(rv)).pack(side="left", padx=3)
         else:
             ctk.CTkButton(cf, text="Show Answer", width=200, height=45,

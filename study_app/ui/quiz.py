@@ -69,8 +69,8 @@ class QuizTab(ctk.CTkFrame):
         self.interleave_mode_btn = ctk.CTkButton(
             mode_frame, text="🔀 Interleaved", width=130, height=32,
             font=FONTS["body"],
-            fg_color="#8b5cf6" if self.is_interleaved else COLORS["bg_secondary"],
-            hover_color="#7c3aed", corner_radius=8,
+            fg_color=COLORS["accent_alt"] if self.is_interleaved else COLORS["bg_secondary"],
+            hover_color=COLORS["accent_alt_hover"], corner_radius=8,
             command=lambda: self._set_quiz_mode(True)
         )
         self.interleave_mode_btn.pack(side="left", padx=3)
@@ -111,13 +111,13 @@ class QuizTab(ctk.CTkFrame):
         btn_frame = ctk.CTkFrame(self.setup_frame, fg_color="transparent")
         btn_frame.pack(pady=(5, PADDING["section"]))
 
-        gen_color = "#8b5cf6" if self.is_interleaved else COLORS["accent"]
+        gen_color = COLORS["accent_alt"] if self.is_interleaved else COLORS["accent"]
         gen_text = "🔀 Generate Interleaved Quiz" if self.is_interleaved else "⚡ Generate Quiz"
 
         self.gen_btn = ctk.CTkButton(
             btn_frame, text=gen_text, width=220, height=40,
             font=FONTS["body_bold"], fg_color=gen_color,
-            hover_color="#7c3aed" if self.is_interleaved else COLORS["accent_hover"],
+            hover_color=COLORS["accent_alt_hover"] if self.is_interleaved else COLORS["accent_hover"],
             corner_radius=10,
             command=self.generate_quiz
         )
@@ -200,8 +200,8 @@ class QuizTab(ctk.CTkFrame):
                     variable=var,
                     font=FONTS["body"],
                     text_color=COLORS["text_primary"],
-                    fg_color="#8b5cf6",
-                    hover_color="#7c3aed",
+                    fg_color=COLORS["accent_alt"],
+                    hover_color=COLORS["accent_alt_hover"],
                     corner_radius=4
                 )
                 cb.pack(anchor="w", padx=8, pady=2)
@@ -356,7 +356,7 @@ class QuizTab(ctk.CTkFrame):
 
         prog = ctk.CTkProgressBar(
             prog_frame, width=200, height=6,
-            fg_color=COLORS["bg_secondary"], progress_color="#8b5cf6" if self._quiz_interleaved else COLORS["accent"]
+            fg_color=COLORS["bg_secondary"], progress_color=COLORS["accent_alt"] if self._quiz_interleaved else COLORS["accent"]
         )
         prog.set(self.current_q / len(self.questions))
         prog.pack(side="right")
@@ -373,11 +373,11 @@ class QuizTab(ctk.CTkFrame):
         # Topic badge (always show in interleaved, optional in single)
         topic = q.get("topic", "")
         if topic and self._quiz_interleaved:
-            topic_badge = ctk.CTkFrame(card, fg_color="#8b5cf6", corner_radius=6)
+            topic_badge = ctk.CTkFrame(card, fg_color=COLORS["accent_alt"], corner_radius=6)
             topic_badge.pack(pady=(16, 0))
             ctk.CTkLabel(
                 topic_badge, text=f"  📂 {topic[:45]}  ",
-                font=("Segoe UI", 11, "bold"), text_color="#ffffff"
+                font=("Segoe UI", 11, "bold"), text_color=COLORS["text_on_accent"]
             ).pack(padx=2, pady=2)
 
         ctk.CTkLabel(
@@ -424,8 +424,8 @@ class QuizTab(ctk.CTkFrame):
         self.next_btn_frame = ctk.CTkFrame(self.quiz_frame, fg_color="transparent")
         self.next_btn = ctk.CTkButton(
             self.next_btn_frame, text="Next Question →", width=180, height=42,
-            font=FONTS["body_bold"], fg_color="#8b5cf6" if self._quiz_interleaved else COLORS["accent"],
-            hover_color="#7c3aed" if self._quiz_interleaved else COLORS["accent_hover"],
+            font=FONTS["body_bold"], fg_color=COLORS["accent_alt"] if self._quiz_interleaved else COLORS["accent"],
+            hover_color=COLORS["accent_alt_hover"] if self._quiz_interleaved else COLORS["accent_hover"],
             corner_radius=10, command=self._next_question
         )
         self.next_btn.pack(pady=(10, 5))
@@ -454,10 +454,10 @@ class QuizTab(ctk.CTkFrame):
 
             if i == correct:
                 frame.configure(fg_color=COLORS["success"])
-                label.configure(text_color="#1a1a2e")
+                label.configure(text_color=COLORS["text_on_state"])
             elif i == selected and not is_correct:
                 frame.configure(fg_color=COLORS["danger"])
-                label.configure(text_color="#1a1a2e")
+                label.configure(text_color=COLORS["text_on_state"])
             else:
                 frame.configure(fg_color=COLORS["bg_secondary"])
 
@@ -525,7 +525,7 @@ class QuizTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="🔄 Try Again", width=130, height=38,
-            font=FONTS["body"], fg_color="#8b5cf6" if self._quiz_interleaved else COLORS["accent"],
+            font=FONTS["body"], fg_color=COLORS["accent_alt"] if self._quiz_interleaved else COLORS["accent"],
             corner_radius=8, command=self.generate_quiz
         ).pack(side="left", padx=6)
 

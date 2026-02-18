@@ -54,13 +54,13 @@ class NotesTab(ctk.CTkFrame):
         self.focus_btn.pack(side="left", padx=4)
 
         ctk.CTkButton(br, text="➕ New Note", width=120, height=34, font=FONTS["body"],
-            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            fg_color=COLORS["success"], hover_color=COLORS["success_hover"], corner_radius=8,
             command=self._new_note).pack(side="left", padx=4)
         ctk.CTkButton(br, text="📂 Import File", width=120, height=34, font=FONTS["body"],
             fg_color=COLORS["accent"], hover_color=COLORS["accent_hover"], corner_radius=8,
             command=self.import_file).pack(side="left", padx=4)
         ctk.CTkButton(br, text="📋 Paste Note", width=120, height=34, font=FONTS["body"],
-            fg_color=COLORS["success"], hover_color="#00d2a0", corner_radius=8,
+            fg_color=COLORS["success"], hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.paste_dlg).pack(side="left", padx=4)
         self.export_btn = ctk.CTkButton(br, text="📤 Export", width=100, height=34,
             font=FONTS["body"], fg_color=COLORS["bg_card"], hover_color=COLORS["accent_hover"],

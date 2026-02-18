@@ -150,7 +150,7 @@ class SettingsTab(ctk.CTkFrame):
         self.save_key_btn = ctk.CTkButton(
             btn_frame, text="💾 Save API Settings", width=170, height=38,
             font=FONTS["body_bold"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self._save_api_settings
         )
         self.save_key_btn.pack(side="left")

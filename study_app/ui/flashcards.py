@@ -46,8 +46,8 @@ class FlashcardsTab(ctk.CTkFrame):
 
         self.interleave_btn = ctk.CTkButton(
             btn_row, text="🔀 Interleaved", width=120, height=34,
-            font=FONTS["body"], fg_color="#8b5cf6",
-            hover_color="#7c3aed", corner_radius=8,
+            font=FONTS["body"], fg_color=COLORS["accent_alt"],
+            hover_color=COLORS["accent_alt_hover"], corner_radius=8,
             command=self.start_interleaved_review
         )
         self.interleave_btn.pack(side="left", padx=4)
@@ -55,14 +55,14 @@ class FlashcardsTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="➕ New Card", width=110, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.show_create_dialog
         ).pack(side="left", padx=4)
 
         ctk.CTkButton(
             btn_row, text="🤖 AI Generate", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["warning"],
-            hover_color="#f0be50", corner_radius=8,
+            hover_color=COLORS["warning_hover"], corner_radius=8,
             command=self.show_ai_generate_dialog
         ).pack(side="left", padx=4)
 
@@ -102,7 +102,7 @@ class FlashcardsTab(ctk.CTkFrame):
         due_count = len(self.current_cards)
         self.status_label.configure(text=f"📋 {due_count} card{'s' if due_count != 1 else ''} due for review")
         self.review_btn.configure(fg_color=COLORS["accent"])
-        self.interleave_btn.configure(fg_color="#8b5cf6")
+        self.interleave_btn.configure(fg_color=COLORS["accent_alt"])
 
         if due_count == 0:
             self._show_empty_state()
@@ -127,7 +127,7 @@ class FlashcardsTab(ctk.CTkFrame):
             text=f"🔀 Interleaved: {due_count} card{'s' if due_count != 1 else ''} across {topic_count} topic{'s' if topic_count != 1 else ''}"
         )
         self.interleave_btn.configure(fg_color=COLORS["accent"])
-        self.review_btn.configure(fg_color="#8b5cf6")
+        self.review_btn.configure(fg_color=COLORS["accent_alt"])
 
         if due_count == 0:
             self._show_empty_state()
@@ -160,8 +160,8 @@ class FlashcardsTab(ctk.CTkFrame):
 
         ctk.CTkButton(
             btn_row, text="Review Shuffled Anyway", width=180, height=38,
-            font=FONTS["body_bold"], fg_color="#8b5cf6",
-            hover_color="#7c3aed", corner_radius=8,
+            font=FONTS["body_bold"], fg_color=COLORS["accent_alt"],
+            hover_color=COLORS["accent_alt_hover"], corner_radius=8,
             command=self._show_card
         ).pack(side="left", padx=6)
 
@@ -221,11 +221,11 @@ class FlashcardsTab(ctk.CTkFrame):
 
         # Topic badge for interleaved mode
         if self.is_interleaved and card.get("note_title"):
-            topic_badge = ctk.CTkFrame(card_frame, fg_color="#8b5cf6", corner_radius=6)
+            topic_badge = ctk.CTkFrame(card_frame, fg_color=COLORS["accent_alt"], corner_radius=6)
             topic_badge.pack(pady=(15, 0))
             ctk.CTkLabel(
                 topic_badge, text=f"  📂 {card['note_title'][:45]}  ",
-                font=("Segoe UI", 11, "bold"), text_color="#ffffff"
+                font=("Segoe UI", 11, "bold"), text_color=COLORS["text_on_accent"]
             ).pack(padx=2, pady=2)
 
         # Front (question)
@@ -279,7 +279,7 @@ class FlashcardsTab(ctk.CTkFrame):
                     width=75, height=55, font=FONTS["small"],
                     fg_color=rating_colors[rating_val],
                     hover_color=COLORS["accent_hover"],
-                    text_color="#1a1a2e",
+                    text_color=COLORS["text_on_state"],
                     corner_radius=8,
                     command=lambda r=rating_val: self._rate_card(r)
                 )
@@ -390,7 +390,7 @@ class FlashcardsTab(ctk.CTkFrame):
             ctk.CTkButton(
                 card_frame, text="🗑️", width=36, height=36,
                 font=FONTS["small"], fg_color=COLORS["danger"],
-                hover_color="#c0392b", corner_radius=6,
+                hover_color=COLORS["danger_hover"], corner_radius=6,
                 command=lambda cid=card["id"]: self._delete_card_from_browse(cid)
             ).pack(side="right", padx=8, pady=8)
 

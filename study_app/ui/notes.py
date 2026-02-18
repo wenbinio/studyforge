@@ -80,7 +80,7 @@ class NotesTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="➕ New Note", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self._new_note
         ).pack(side="left", padx=4)
 
@@ -94,7 +94,7 @@ class NotesTab(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row, text="📋 Paste Note", width=120, height=34,
             font=FONTS["body"], fg_color=COLORS["success"],
-            hover_color="#00d2a0", corner_radius=8,
+            hover_color=COLORS["success_hover"], corner_radius=8,
             command=self.show_paste_dialog
         ).pack(side="left", padx=4)
 
