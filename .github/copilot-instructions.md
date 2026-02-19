@@ -1,5 +1,16 @@
 Plan out your process before writing code and wait for approval from the user. Detail your plan and review it for any inaccuracies or common errors.
 
+## Repository Directory Quick Map
+
+Repo root: `/home/runner/work/studyforge/studyforge`
+
+- `.github/copilot-instructions.md` — primary Copilot context/instructions for this repo
+- `.github/workflows/build.yml` — CI/release workflow for desktop builds and Flutter APK
+- `README.md` — top-level product/repo overview
+- `study_app/` — production desktop app variant (PyInstaller + `%APPDATA%` paths)
+- `study_app_v2/` — streamlined desktop variant (setup wizard + config manager)
+- `studyforge_flutter/` — Flutter mobile track (Dart app + tests + Android build)
+
 ## Project Overview
 
 StudyForge is a Windows desktop study app built with **Python 3.10+** and **CustomTkinter**. It combines Pomodoro Timer, Flashcards with SM-2 spaced repetition, AI-powered quizzes, and lecture notes management. There are two variants:
