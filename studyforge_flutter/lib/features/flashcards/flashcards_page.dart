@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_controller.dart';
+import '../../core/ai_parsers.dart';
+import '../../core/flashcard_review.dart';
 import '../../core/models.dart';
 
 class FlashcardsPage extends StatefulWidget {
@@ -18,13 +20,19 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
   final tagsController = TextEditingController();
 
   List<Flashcard> dueCards = [];
+  List<Note> notes = [];
   int currentIndex = 0;
   bool showBack = false;
+  bool generatingAiCards = false;
+  int? selectedNoteId;
+  bool interleavedMode = false;
+  int topicCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadDueCards();
+    _loadNotes();
   }
 
   @override
@@ -37,13 +45,26 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
 
   Future<void> _loadDueCards() async {
     final cards = await widget.controller.database.getFlashcards(dueOnly: true);
+    final queue = buildReviewQueue(cards, interleaved: interleavedMode);
     if (!mounted) {
       return;
     }
     setState(() {
-      dueCards = cards;
+      dueCards = queue;
+      topicCount = interleavedMode ? interleavedTopicCount(cards) : 0;
       currentIndex = 0;
       showBack = false;
+    });
+  }
+
+  Future<void> _loadNotes() async {
+    final fetched = await widget.controller.database.getNotes();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      notes = fetched;
+      selectedNoteId ??= fetched.isEmpty ? null : fetched.first.id;
     });
   }
 
@@ -95,6 +116,88 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     await _loadDueCards();
   }
 
+  Future<void> _setInterleavedMode(bool enabled) async {
+    setState(() {
+      interleavedMode = enabled;
+    });
+    await _loadDueCards();
+  }
+
+  Future<void> _generateCardsFromNote() async {
+    final noteId = selectedNoteId;
+    if (noteId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Create a note before AI generation.')),
+      );
+      return;
+    }
+    Note? note;
+    for (final n in notes) {
+      if (n.id == noteId) {
+        note = n;
+        break;
+      }
+    }
+    if (note == null) {
+      return;
+    }
+
+    setState(() {
+      generatingAiCards = true;
+    });
+    try {
+      final raw = await widget.controller.ai.generateText(
+        provider: widget.controller.config.aiProvider,
+        apiKey: widget.controller.config.apiKey,
+        model: widget.controller.config.model,
+        prompt:
+            'Generate 10 flashcards from the notes below. Return ONLY valid JSON as either an array or object with key "flashcards". '
+            'Each item must include "front", "back", and optional "tags".\n\n'
+            'Title: ${note.title}\n'
+            'Tags: ${note.tags}\n'
+            'Content:\n${note.content}',
+      );
+      final generated = parseGeneratedFlashcards(raw).take(10).toList();
+      if (generated.isEmpty) {
+        throw Exception('AI returned no usable cards.');
+      }
+      for (final card in generated) {
+        await widget.controller.database.addFlashcard(
+          Flashcard(
+            id: null,
+            noteId: noteId,
+            front: card.front,
+            back: card.back,
+            tags: card.tags,
+            nextReview: DateTime.now(),
+            createdAt: DateTime.now(),
+          ),
+        );
+      }
+      await widget.controller.database.incrementDailyStat('cards_added', generated.length);
+      await _loadDueCards();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added ${generated.length} AI flashcards.')),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('AI generation failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          generatingAiCards = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentCard = dueCards.isEmpty ? null : dueCards[currentIndex];
@@ -102,8 +205,30 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Due cards: ${dueCards.length}', style: Theme.of(context).textTheme.titleMedium),
+        if (interleavedMode)
+          Text(
+            'Interleaved due cards: ${dueCards.length} across $topicCount topic${topicCount == 1 ? '' : 's'}',
+            style: Theme.of(context).textTheme.titleMedium,
+          )
+        else
+          Text('Due cards: ${dueCards.length}', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment<bool>(value: false, label: Text('Normal')),
+            ButtonSegment<bool>(value: true, label: Text('Interleaved')),
+          ],
+          selected: {interleavedMode},
+          onSelectionChanged: (selection) => _setInterleavedMode(selection.first),
+        ),
+        const SizedBox(height: 8),
+        if (interleavedMode && topicCount < 2 && dueCards.isNotEmpty)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Only one topic in due cards. Interleaving works best across multiple topics.',
+            ),
+          ),
         Card(
           child: SizedBox(
             height: 180,
@@ -159,7 +284,7 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
           decoration: const InputDecoration(labelText: 'Tags'),
         ),
         const SizedBox(height: 8),
-        Row(
+         Row(
           children: [
             FilledButton.icon(
               onPressed: _addCard,
@@ -173,7 +298,34 @@ class _FlashcardsPageState extends State<FlashcardsPage> {
               label: const Text('Refresh Due'),
             )
           ],
-        )
+        ),
+        const Divider(height: 32),
+        Text('AI generate from note', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<int>(
+          value: selectedNoteId,
+          items: notes
+              .where((n) => n.id != null)
+              .map(
+                (note) => DropdownMenuItem<int>(
+                  value: note.id,
+                  child: Text(note.title, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(),
+          onChanged: (value) {
+            setState(() {
+              selectedNoteId = value;
+            });
+          },
+          decoration: const InputDecoration(labelText: 'Source note'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: generatingAiCards ? null : _generateCardsFromNote,
+          icon: const Icon(Icons.auto_awesome),
+          label: Text(generatingAiCards ? 'Generating...' : 'Generate 10 Cards'),
+        ),
       ],
     );
   }
