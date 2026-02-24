@@ -108,7 +108,7 @@ class EssaysTab(ctk.CTkFrame):
             fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
             font=FONTS["body"], corner_radius=8, width=250).pack(side="left", padx=8)
         ctk.CTkButton(rf, text="📂 Upload Rubric", width=130, height=30, font=FONTS["small"],
-            fg_color=COLORS["warning"], corner_radius=6,
+            fg_color=COLORS["bg_secondary"], hover_color=COLORS["bg_hover"], corner_radius=6,
             command=self._upload_rubric).pack(side="left", padx=4)
         ctk.CTkButton(rf, text="📋 Paste Rubric", width=120, height=30, font=FONTS["small"],
             fg_color=COLORS["accent_light"], corner_radius=6,
