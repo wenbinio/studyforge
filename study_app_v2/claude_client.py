@@ -173,11 +173,18 @@ class ClaudeStudyClient:
                 except json.JSONDecodeError: continue
         return None
 
-    def generate_flashcards(self, note_content: str, count: int = 10, context: str = "") -> list:
+    def generate_flashcards(self, note_content: str, count: int = 10, context: str = "", card_style: str = "qa") -> list:
         system = ("You create high-quality flashcards testing key concepts. "
                   "Each card tests ONE piece of knowledge. Respond with ONLY a JSON array.")
+        card_style = (card_style or "qa").lower()
+        style_rules = (
+            "Rules: Front=sentence/prompt with one key term blanked as _____, "
+            "Back=missing term(s) only. Keep each cloze to one testable fact."
+            if card_style == "cloze"
+            else "Rules: Front=clear question, Back=concise answer. Mix difficulty levels."
+        )
         prompt = f"""Create exactly {count} flashcards from these lecture notes.
-Rules: Front=clear question, Back=concise answer. Mix difficulty levels.
+{style_rules}
 {f"Subject: {context}" if context else ""}
 Respond ONLY with JSON: [{{"front":"...","back":"..."}}, ...]
 
