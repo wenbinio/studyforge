@@ -187,7 +187,9 @@ class ClaudeStudyClient:
                         continue
             return None
 
-    def generate_flashcards(self, note_content: str, count: int = 10, context: str = "") -> list[dict]:
+    def generate_flashcards(
+        self, note_content: str, count: int = 10, context: str = "", card_style: str = "qa"
+    ) -> list[dict]:
         """
         Generate flashcards from note content.
         Returns list of dicts: [{"front": "...", "back": "..."}, ...]
@@ -198,11 +200,19 @@ class ClaudeStudyClient:
             "Each card should test ONE specific piece of knowledge. "
             "You MUST respond with ONLY a valid JSON array — no commentary, no markdown."
         )
+        card_style = (card_style or "qa").lower()
+        style_rules = (
+            "- Front: A sentence or prompt with one key term blanked out using _____\n"
+            "- Back: The missing term(s) only\n"
+            "- Keep each cloze focused on ONE testable fact\n"
+            if card_style == "cloze"
+            else "- Front: A clear, specific question or prompt (not vague)\n"
+                 "- Back: A concise, complete answer\n"
+        )
         prompt = f"""Create exactly {count} flashcards from the following lecture notes.
 
 Rules:
-- Front: A clear, specific question or prompt (not vague)
-- Back: A concise, complete answer
+{style_rules}
 - Mix difficulty levels: definitions, comparisons, applications, edge cases
 - Focus on what a student would need for exams
 {f"- Context/subject: {context}" if context else ""}

@@ -535,6 +535,17 @@ class FlashcardsTab(ctk.CTkFrame):
             font=FONTS["body"], width=80, corner_radius=8
         ).pack(side="left", padx=8)
 
+        ctk.CTkLabel(
+            count_frame, text="Type:",
+            font=FONTS["body"], text_color=COLORS["text_secondary"]
+        ).pack(side="left", padx=(10, 0))
+        self.card_type_var = ctk.StringVar(value="Normal")
+        ctk.CTkOptionMenu(
+            count_frame, values=["Normal", "Cloze"], variable=self.card_type_var,
+            fg_color=COLORS["bg_input"], button_color=COLORS["accent"],
+            font=FONTS["body"], width=110, corner_radius=8
+        ).pack(side="left", padx=8)
+
         # Generate button
         self.gen_btn = ctk.CTkButton(
             frame, text="⚡ Generate Flashcards", width=200, height=42,
@@ -574,7 +585,10 @@ class FlashcardsTab(ctk.CTkFrame):
         def generate():
             try:
                 cards = self.app.claude_client.generate_flashcards(
-                    note["content"], count=count, context=note["title"]
+                    note["content"],
+                    count=count,
+                    context=note["title"],
+                    card_style="cloze" if self.card_type_var.get() == "Cloze" else "qa",
                 )
                 self.after(0, lambda: self._display_generated_cards(cards, note["id"]))
             except Exception as e:
