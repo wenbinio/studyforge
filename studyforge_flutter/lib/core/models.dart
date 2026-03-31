@@ -323,6 +323,16 @@ class Rubric {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  factory Rubric.fromMap(Map<String, Object?> map) {
+    return Rubric(
+      id: map['id'] as int?,
+      name: map['name'] as String,
+      content: map['content'] as String,
+      sourceFile: map['source_file'] as String?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
 }
 
 class Essay {

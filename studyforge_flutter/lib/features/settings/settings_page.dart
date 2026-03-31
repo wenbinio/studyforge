@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_controller.dart';
 import '../../core/models.dart';
+import '../../core/settings_connection.dart';
+import '../../core/settings_hints.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
@@ -28,6 +30,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   late String provider;
   late String theme;
+  bool testingConnection = false;
+  String connectionStatus = '';
 
   @override
   void initState() {
@@ -102,6 +106,56 @@ class _SettingsPageState extends State<SettingsPage> {
         .showSnackBar(const SnackBar(content: Text('Settings saved.')));
   }
 
+  Future<void> _testConnection() async {
+    final key = apiKeyController.text.trim();
+    if (key.isEmpty) {
+      setState(() {
+        connectionStatus = '⚠️ Enter an API key first.';
+      });
+      return;
+    }
+    final detected = widget.controller.configService.detectProviderFromKey(key);
+    final model = modelController.text.trim();
+
+    setState(() {
+      testingConnection = true;
+      connectionStatus = 'Testing connection...';
+    });
+    try {
+      final result = await widget.controller.ai.generateText(
+        provider: detected,
+        apiKey: key,
+        model: model,
+        prompt: buildConnectionTestPrompt(),
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        provider = detected;
+        connectionStatus = '🟢 Connected: $detected / ${model.isEmpty ? "(default model)" : model}';
+      });
+      if (result.trim().isEmpty) {
+        setState(() {
+          connectionStatus = '🟢 Connected (empty response from model).';
+        });
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        connectionStatus = '🔴 Connection failed: $e';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          testingConnection = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -126,6 +180,32 @@ class _SettingsPageState extends State<SettingsPage> {
           controller: modelController,
           decoration: const InputDecoration(labelText: 'Model'),
         ),
+        const SizedBox(height: 8),
+        Text(providerHint(provider)),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () {
+            final model = recommendedModel(provider);
+            if (model.isEmpty) {
+              return;
+            }
+            setState(() {
+              modelController.text = model;
+            });
+          },
+          icon: const Icon(Icons.tips_and_updates),
+          label: const Text('Use recommended model'),
+        ),
+        const SizedBox(height: 8),
+        FilledButton.icon(
+          onPressed: testingConnection ? null : _testConnection,
+          icon: const Icon(Icons.wifi_tethering),
+          label: Text(testingConnection ? 'Testing...' : 'Test Connection'),
+        ),
+        if (connectionStatus.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(connectionStatus),
+        ],
         const Divider(height: 28),
         const Text('Pomodoro', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),

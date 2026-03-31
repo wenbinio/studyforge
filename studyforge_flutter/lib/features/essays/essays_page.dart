@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_controller.dart';
+import '../../core/essay_grading.dart';
+import '../../core/models.dart';
+import '../../core/rubric_import.dart';
 
 class EssaysPage extends StatefulWidget {
   const EssaysPage({super.key, required this.controller});
@@ -14,14 +17,97 @@ class EssaysPage extends StatefulWidget {
 class _EssaysPageState extends State<EssaysPage> {
   final promptController = TextEditingController();
   final draftController = TextEditingController();
+  final rubricNameController = TextEditingController();
+  final rubricContentController = TextEditingController();
+  final rubricPathController = TextEditingController();
+  List<Rubric> rubrics = [];
+  int? selectedRubricId;
   String feedback = '';
   bool loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRubrics();
+  }
 
   @override
   void dispose() {
     promptController.dispose();
     draftController.dispose();
+    rubricNameController.dispose();
+    rubricContentController.dispose();
+    rubricPathController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadRubrics() async {
+    final fetched = await widget.controller.database.getRubrics();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      rubrics = fetched;
+      selectedRubricId ??= fetched.isEmpty ? null : fetched.first.id;
+    });
+  }
+
+  Future<void> _saveRubric() async {
+    final name = rubricNameController.text.trim();
+    final content = rubricContentController.text.trim();
+    if (name.isEmpty || content.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rubric name and content are required.')),
+      );
+      return;
+    }
+    await widget.controller.database.addRubric(
+      Rubric(
+        id: null,
+        name: name,
+        content: content,
+        createdAt: DateTime.now(),
+      ),
+    );
+    rubricNameController.clear();
+    rubricContentController.clear();
+    await _loadRubrics();
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Rubric saved.')),
+    );
+  }
+
+  Future<void> _importRubricFromPath() async {
+    try {
+      final (name, content) = await loadRubricFromPath(rubricPathController.text);
+      await widget.controller.database.addRubric(
+        Rubric(
+          id: null,
+          name: name,
+          content: content,
+          sourceFile: rubricPathController.text.trim(),
+          createdAt: DateTime.now(),
+        ),
+      );
+      rubricPathController.clear();
+      await _loadRubrics();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Imported rubric '$name'.")),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Rubric import failed: $e')),
+      );
+    }
   }
 
   Future<void> _gradeEssay() async {
@@ -39,12 +125,20 @@ class _EssaysPageState extends State<EssaysPage> {
     });
 
     try {
+      String rubricText = '';
+      if (selectedRubricId != null) {
+        final rubric = await widget.controller.database.getRubric(selectedRubricId!);
+        rubricText = rubric?.content ?? '';
+      }
       final result = await widget.controller.ai.generateText(
         provider: widget.controller.config.aiProvider,
         apiKey: widget.controller.config.apiKey,
         model: widget.controller.config.model,
-        prompt:
-            'Grade this essay and return: score, strengths, weaknesses, and revision plan.\n\nPrompt:\n$prompt\n\nEssay:\n$draft',
+        prompt: buildEssayGradingPrompt(
+          prompt: prompt,
+          draft: draft,
+          rubricText: rubricText,
+        ),
       );
       if (!mounted) {
         return;
@@ -72,6 +166,71 @@ class _EssaysPageState extends State<EssaysPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          Text('Rubric (optional)', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<int?>(
+            value: selectedRubricId,
+            items: [
+              const DropdownMenuItem<int?>(value: null, child: Text('(none)')),
+              ...rubrics.where((r) => r.id != null).map(
+                    (rubric) => DropdownMenuItem<int?>(
+                      value: rubric.id,
+                      child: Text(rubric.name, overflow: TextOverflow.ellipsis),
+                    ),
+                  )
+            ],
+            onChanged: (value) {
+              setState(() {
+                selectedRubricId = value;
+              });
+            },
+            decoration: const InputDecoration(labelText: 'Selected rubric'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: rubricNameController,
+            decoration: const InputDecoration(labelText: 'New rubric name'),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: rubricContentController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              alignLabelWithHint: true,
+              labelText: 'New rubric content',
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: rubricPathController,
+            decoration: const InputDecoration(
+              labelText: 'Import rubric from path (.txt/.md)',
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              FilledButton.icon(
+                onPressed: _saveRubric,
+                icon: const Icon(Icons.save),
+                label: const Text('Save Rubric'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _loadRubrics,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh Rubrics'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _importRubricFromPath,
+                icon: const Icon(Icons.file_open),
+                label: const Text('Import Path'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           TextField(
             controller: promptController,
             maxLines: 3,

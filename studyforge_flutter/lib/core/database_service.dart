@@ -2,6 +2,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'database_validators.dart';
 import 'models.dart';
 
 class DatabaseService {
@@ -186,14 +187,7 @@ CREATE TABLE participation_questions (
   }
 
   Future<void> incrementDailyStat(String field, int amount) async {
-    const valid = {
-      'cards_reviewed',
-      'cards_added',
-      'pomodoro_sessions',
-      'study_minutes',
-      'quiz_questions_answered'
-    };
-    if (!valid.contains(field)) {
+    if (!isValidDailyStatField(field)) {
       throw Exception('Invalid stat field: $field');
     }
 
@@ -253,6 +247,26 @@ CREATE TABLE participation_questions (
       [now],
     );
     return rows.first['count'] as int? ?? 0;
+  }
+
+  Future<int> addRubric(Rubric rubric) async {
+    final db = await database;
+    return db.insert('rubrics', rubric.toMap()..remove('id'));
+  }
+
+  Future<List<Rubric>> getRubrics() async {
+    final db = await database;
+    final rows = await db.query('rubrics', orderBy: 'created_at DESC');
+    return rows.map(Rubric.fromMap).toList();
+  }
+
+  Future<Rubric?> getRubric(int id) async {
+    final db = await database;
+    final rows = await db.query('rubrics', where: 'id = ?', whereArgs: [id], limit: 1);
+    if (rows.isEmpty) {
+      return null;
+    }
+    return Rubric.fromMap(rows.first);
   }
 
   String _dateOnly(DateTime d) =>
