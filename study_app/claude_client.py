@@ -7,6 +7,7 @@ from lecture notes using the Anthropic Claude API.
 
 import json
 import re
+import time
 from urllib import request
 from anthropic import Anthropic
 
@@ -18,6 +19,9 @@ PROVIDER_DEFAULT_MODELS = {
     "perplexity": "sonar",
     "other": "gpt-4o-mini",
 }
+
+MODEL_DISCOVERY_CACHE_TTL_SECONDS = 300
+_MODEL_DISCOVERY_CACHE: dict[tuple[str, str], tuple[float, list[str]]] = {}
 
 
 def detect_provider_from_key(api_key: str) -> str | None:
@@ -51,19 +55,28 @@ def get_provider_models(api_key: str, provider: str) -> list[str]:
     key = (api_key or "").strip()
     if not key:
         return []
+    cache_key = (provider, key)
+    cached = _MODEL_DISCOVERY_CACHE.get(cache_key)
+    now = time.time()
+    if cached and now - cached[0] < MODEL_DISCOVERY_CACHE_TTL_SECONDS:
+        return cached[1]
     try:
         if provider == "anthropic":
             data = _get_json(
                 "https://api.anthropic.com/v1/models",
                 {"x-api-key": key, "anthropic-version": "2023-06-01"},
             )
-            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            models = [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            _MODEL_DISCOVERY_CACHE[cache_key] = (now, models)
+            return models
         if provider in ("openai", "other"):
             data = _get_json(
                 "https://api.openai.com/v1/models",
                 {"Authorization": f"Bearer {key}"},
             )
-            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            models = [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            _MODEL_DISCOVERY_CACHE[cache_key] = (now, models)
+            return models
         if provider == "gemini":
             data = _get_json(
                 f"https://generativelanguage.googleapis.com/v1beta/models?key={key}",
@@ -76,13 +89,16 @@ def get_provider_models(api_key: str, provider: str) -> list[str]:
                     name = name.split("/", 1)[1]
                 if name:
                     models.append(name)
+            _MODEL_DISCOVERY_CACHE[cache_key] = (now, models)
             return models
         if provider == "perplexity":
             data = _get_json(
                 "https://api.perplexity.ai/models",
                 {"Authorization": f"Bearer {key}"},
             )
-            return [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            models = [m.get("id") for m in data.get("data", []) if isinstance(m, dict) and m.get("id")]
+            _MODEL_DISCOVERY_CACHE[cache_key] = (now, models)
+            return models
     except Exception:
         pass
 
@@ -93,7 +109,9 @@ def get_provider_models(api_key: str, provider: str) -> list[str]:
         for p in fallbacks:
             models = get_provider_models(key, p)
             if models:
+                _MODEL_DISCOVERY_CACHE[cache_key] = (now, models)
                 return models
+    _MODEL_DISCOVERY_CACHE[cache_key] = (now, [])
     return []
 
 
