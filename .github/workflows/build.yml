@@ -94,6 +94,13 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body: |
+            Includes the latest AI integration update with multi-provider support
+            (Anthropic, OpenAI, Gemini, and Perplexity) across both Windows builds.
+            
+            **Downloads:**
+            - **StudyForge.exe** — Full-featured version
+            - **StudyForge_v2.exe** — Streamlined version with setup wizard
           generate_release_notes: true
           files: |
             artifacts/StudyForge/StudyForge.exe
@@ -121,6 +128,8 @@ jobs:
           name: Latest Build
           body: |
             Automatically updated pre-release from the latest `main` branch.
+            Includes the latest AI integration update with multi-provider support
+            (Anthropic, OpenAI, Gemini, and Perplexity).
 
             **Downloads:**
             - **StudyForge.exe** — Full-featured version
